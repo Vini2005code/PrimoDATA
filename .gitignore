@@ -1,0 +1,42 @@
+# --- SEGURANÇA (O mais importante!) ---
+.env
+*.env
+bin/
+*.bin
+
+# --- PYTHON ---
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+build/
+dist/
+*.egg-info/
+
+# --- JAVA / SPRING BOOT ---
+target/
+*.class
+*.jar
+*.war
+*.ear
+.mvn/
+mvnw
+mvnw.cmd
+
+# --- IDEs (IntelliJ e VS Code) ---
+.idea/
+*.iml
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# --- BANCO DE DADOS E LOGS ---
+*.log
+*.sqlite
+/db_data/
+
+# --- SISTEMA OPERACIONAL ---
+.DS_Store
+Thumbs.db

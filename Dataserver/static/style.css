@@ -1,0 +1,134 @@
+/* Variáveis baseadas no seu código */
+:root {
+    --primary: #014c69; /* Seu --sidebar / --primary */
+    --accent: #b15d41;  /* Seu oklch(0.6983 0.170779 56.04) aproximado */
+    --background: #f8f9fa;
+    --card: #ffffff;
+    --text: #2c3e50;
+    --border: #e2e8f0;
+    --radius: 0.625rem;
+    --sidebar-fg: #ccd9de;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--background);
+    color: var(--text);
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* Layout Principal */
+.sidebar {
+    width: 260px;
+    background-color: var(--primary);
+    color: var(--sidebar-fg);
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+}
+
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+/* Topbar */
+.header {
+    height: 64px;
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 30px;
+    justify-content: space-between;
+}
+
+/* Cards de KPI */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    padding: 30px;
+}
+/* Container do gráfico estilo Lovable */
+.chart-container {
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    margin-top: 15px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+    width: 100%;
+    max-width: 600px;
+    transition: transform 0.2s ease;
+}
+
+.chart-container:hover {
+    transform: translateY(-2px);
+}
+
+canvas {
+    max-height: 300px;
+}
+.kpi-card {
+    background: var(--card);
+    padding: 20px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.kpi-card h3 { font-size: 0.8rem; color: #64748b; text-transform: uppercase; }
+.kpi-card p { font-size: 1.8rem; font-weight: bold; color: var(--primary); margin-top: 10px; }
+
+/* Área do Chat */
+.chat-container {
+    margin: 0 30px 30px;
+    flex: 1;
+    background: var(--card);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-messages {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    background: #fcfcfc;
+}
+
+.chat-input-area {
+    padding: 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 10px;
+}
+
+.chat-input-area input {
+    flex: 1;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    outline: none;
+}
+
+.chat-input-area button {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 0 25px;
+    border-radius: var(--radius);
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.chat-input-area button:hover { background: #013b52; }
