@@ -1,5 +1,7 @@
+import json
 import pandas as pd
 from sqlalchemy import text, inspect
+from sqlalchemy.dialects.postgresql import JSONB
 import logging
 from config import engine, Config
 
@@ -106,3 +108,222 @@ def get_metricas_dashboard() -> dict:
             "ativos": 0,
             "altas": 0
         }
+
+
+# =============================================================================
+# PERSISTÊNCIA DE CONVERSAS (Histórico do Chat)
+# =============================================================================
+#
+# Estrutura espelha o que o frontend (script.js) já consome:
+#   message = { role, content, hasChart, chartData: { type, title, labels, values } }
+#
+# Tabelas:
+#   conversas (id, titulo, criada_em, atualizada_em)
+#   mensagens (id, conversa_id, role, content, has_chart, chart_data JSONB,
+#              sugestao, criada_em)
+# =============================================================================
+
+DDL_CHAT = """
+CREATE TABLE IF NOT EXISTS conversas (
+    id SERIAL PRIMARY KEY,
+    titulo VARCHAR(200) NOT NULL DEFAULT 'Nova conversa',
+    criada_em TIMESTAMP NOT NULL DEFAULT NOW(),
+    atualizada_em TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS mensagens (
+    id SERIAL PRIMARY KEY,
+    conversa_id INTEGER NOT NULL REFERENCES conversas(id) ON DELETE CASCADE,
+    role VARCHAR(20) NOT NULL CHECK (role IN ('user','assistant')),
+    content TEXT NOT NULL DEFAULT '',
+    has_chart BOOLEAN NOT NULL DEFAULT FALSE,
+    chart_data JSONB,
+    sugestao TEXT,
+    criada_em TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_mensagens_conversa
+    ON mensagens (conversa_id, criada_em);
+"""
+
+
+def init_chat_schema() -> None:
+    """Cria as tabelas de histórico se ainda não existirem (idempotente)."""
+    try:
+        with engine.begin() as conn:
+            for stmt in [s.strip() for s in DDL_CHAT.split(";") if s.strip()]:
+                conn.execute(text(stmt))
+    except Exception as e:
+        logger.error(f"Erro ao inicializar schema de chat: {e}")
+
+
+def _plano_para_chart_data(plano: dict) -> dict | None:
+    """Converte o 'plano' devolvido pela IA no formato chartData usado pelo frontend.
+
+    plano = { tipo_grafico, titulo, eixo_x, valores, ... }
+    chartData = { type, title, labels, values }
+    """
+    if not plano:
+        return None
+    tipo = plano.get("tipo_grafico")
+    if not tipo or tipo == "null":
+        return None
+    return {
+        "type": tipo,
+        "title": plano.get("titulo") or "",
+        "labels": plano.get("eixo_x") or [],
+        "values": plano.get("valores") or [],
+    }
+
+
+def criar_conversa(titulo: str = "Nova conversa") -> int | None:
+    """Cria uma nova conversa e devolve o id."""
+    try:
+        with engine.begin() as conn:
+            row = conn.execute(
+                text("INSERT INTO conversas (titulo) VALUES (:t) RETURNING id"),
+                {"t": (titulo or "Nova conversa")[:200]},
+            ).fetchone()
+            return row[0] if row else None
+    except Exception as e:
+        logger.error(f"Erro ao criar conversa: {e}")
+        return None
+
+
+def renomear_conversa(conversa_id: int, titulo: str) -> bool:
+    """Atualiza o título de uma conversa."""
+    try:
+        with engine.begin() as conn:
+            conn.execute(
+                text(
+                    "UPDATE conversas SET titulo = :t, atualizada_em = NOW() "
+                    "WHERE id = :id"
+                ),
+                {"t": (titulo or "")[:200], "id": conversa_id},
+            )
+            return True
+    except Exception as e:
+        logger.error(f"Erro ao renomear conversa {conversa_id}: {e}")
+        return False
+
+
+def deletar_conversa(conversa_id: int) -> bool:
+    """Remove uma conversa (e suas mensagens via ON DELETE CASCADE)."""
+    try:
+        with engine.begin() as conn:
+            conn.execute(
+                text("DELETE FROM conversas WHERE id = :id"),
+                {"id": conversa_id},
+            )
+            return True
+    except Exception as e:
+        logger.error(f"Erro ao deletar conversa {conversa_id}: {e}")
+        return False
+
+
+def listar_conversas(limite: int = 100) -> list[dict]:
+    """Lista as conversas mais recentes (sem mensagens)."""
+    try:
+        with engine.connect() as conn:
+            rows = conn.execute(
+                text(
+                    "SELECT id, titulo, criada_em, atualizada_em "
+                    "FROM conversas ORDER BY atualizada_em DESC LIMIT :l"
+                ),
+                {"l": limite},
+            ).fetchall()
+            return [
+                {
+                    "id": r[0],
+                    "titulo": r[1],
+                    "criada_em": r[2].isoformat() if r[2] else None,
+                    "atualizada_em": r[3].isoformat() if r[3] else None,
+                }
+                for r in rows
+            ]
+    except Exception as e:
+        logger.error(f"Erro ao listar conversas: {e}")
+        return []
+
+
+def get_conversa(conversa_id: int) -> dict | None:
+    """Retorna uma conversa com todas as mensagens no formato consumido pelo frontend."""
+    try:
+        with engine.connect() as conn:
+            cab = conn.execute(
+                text(
+                    "SELECT id, titulo, criada_em, atualizada_em "
+                    "FROM conversas WHERE id = :id"
+                ),
+                {"id": conversa_id},
+            ).fetchone()
+            if not cab:
+                return None
+
+            msgs = conn.execute(
+                text(
+                    "SELECT id, role, content, has_chart, chart_data, sugestao, criada_em "
+                    "FROM mensagens WHERE conversa_id = :id "
+                    "ORDER BY criada_em ASC, id ASC"
+                ),
+                {"id": conversa_id},
+            ).fetchall()
+
+            return {
+                "id": cab[0],
+                "titulo": cab[1],
+                "criada_em": cab[2].isoformat() if cab[2] else None,
+                "atualizada_em": cab[3].isoformat() if cab[3] else None,
+                "messages": [
+                    {
+                        "id": m[0],
+                        "role": m[1],
+                        "content": m[2] or "",
+                        "hasChart": bool(m[3]),
+                        "chartData": m[4],  # JSONB já vem como dict
+                        "sugestao": m[5],
+                        "criada_em": m[6].isoformat() if m[6] else None,
+                    }
+                    for m in msgs
+                ],
+            }
+    except Exception as e:
+        logger.error(f"Erro ao buscar conversa {conversa_id}: {e}")
+        return None
+
+
+def adicionar_mensagem(
+    conversa_id: int,
+    role: str,
+    content: str,
+    chart_data: dict | None = None,
+    sugestao: str | None = None,
+) -> int | None:
+    """Insere uma mensagem na conversa e atualiza o timestamp da conversa."""
+    if role not in ("user", "assistant"):
+        raise ValueError("role deve ser 'user' ou 'assistant'")
+    try:
+        with engine.begin() as conn:
+            row = conn.execute(
+                text(
+                    "INSERT INTO mensagens "
+                    "(conversa_id, role, content, has_chart, chart_data, sugestao) "
+                    "VALUES (:cid, :r, :c, :h, CAST(:cd AS JSONB), :s) RETURNING id"
+                ),
+                {
+                    "cid": conversa_id,
+                    "r": role,
+                    "c": content or "",
+                    "h": bool(chart_data),
+                    "cd": json.dumps(chart_data) if chart_data is not None else None,
+                    "s": sugestao,
+                },
+            ).fetchone()
+            conn.execute(
+                text("UPDATE conversas SET atualizada_em = NOW() WHERE id = :id"),
+                {"id": conversa_id},
+            )
+            return row[0] if row else None
+    except Exception as e:
+        logger.error(f"Erro ao adicionar mensagem na conversa {conversa_id}: {e}")
+        return None

@@ -6,7 +6,8 @@ import base64
 import logging
 import uvicorn
 import seaborn as sns
-from fastapi import FastAPI, Request
+from typing import Optional
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -40,6 +41,21 @@ logger = logging.getLogger(__name__)
 
 class RequisicaoChat(BaseModel):
     message: str
+    conversa_id: Optional[int] = None  # se None, uma nova conversa será criada
+
+
+class NovaConversa(BaseModel):
+    titulo: Optional[str] = None
+
+
+class RenomearConversa(BaseModel):
+    titulo: str
+
+
+# Garante que as tabelas de histórico existem ao iniciar o app
+@app.on_event("startup")
+def _startup_chat_schema():
+    database.init_chat_schema()
 
 # --- FUNÇÕES AUXILIARES ---
 
@@ -111,41 +127,106 @@ async def home(request: Request):
 @app.post("/api/analisar")
 async def api_analisar(req: RequisicaoChat):
     """
-    Rota principal de inteligência. 
-    Recebe a pergunta, consulta o banco, pede a decisão para a IA e retorna JSON.
+    Rota principal de inteligência.
+    Recebe a pergunta, consulta o banco, pede a decisão para a IA, persiste a
+    troca no histórico (tabelas conversas/mensagens) e retorna JSON.
     """
     try:
         logger.info(f"Processando pergunta: {req.message}")
-        
-        # 1. Busca dados no Postgres (Anonimizados via LGPD no database.py)
+
+        # 0. Garante a existência de uma conversa para persistir o histórico
+        conversa_id = req.conversa_id
+        if not conversa_id:
+            titulo_inicial = (req.message or "Nova conversa").strip()[:60] or "Nova conversa"
+            conversa_id = database.criar_conversa(titulo_inicial)
+
+        # 1. Persiste a mensagem do usuário
+        if conversa_id:
+            database.adicionar_mensagem(conversa_id, "user", req.message)
+
+        # 2. Busca dados no Postgres (Anonimizados via LGPD no database.py)
         contexto = database.get_contexto_clinico_completo()
-        
-        # 2. Chama a IA (Analise_primo.py) para decidir a resposta e o gráfico
+
+        # 3. Chama a IA (Analise_primo.py) para decidir a resposta e o gráfico
         plano = ai_engine.planejar_grafico(contexto, req.message)
-        
-        # 3. Lógica de Gráfico: Decide se gera a imagem (Base64) ou envia apenas dados
-        # Se a IA retornar tipo_grafico como "null", url_imagem será None
+
+        # 4. Lógica de Gráfico: Decide se gera a imagem (Base64) ou envia apenas dados
         url_imagem = None
         if plano.get("tipo_grafico") and plano.get("tipo_grafico") != "null":
             url_imagem = gerar_imagem_grafico(plano)
-            
-        # 4. Retorno padronizado para o JavaScript (script.js)
+
+        # 5. Persiste a resposta do assistente (já no formato chartData do frontend)
+        chart_data = database._plano_para_chart_data(plano)
+        if conversa_id:
+            database.adicionar_mensagem(
+                conversa_id,
+                "assistant",
+                plano.get("analise", "Análise concluída."),
+                chart_data=chart_data,
+                sugestao=plano.get("sugestao"),
+            )
+
+        # 6. Retorno padronizado para o JavaScript (script.js) + conversa_id
         return JSONResponse({
+            "conversa_id": conversa_id,
             "analise": plano.get("analise", "Análise concluída."),
             "tipo_grafico": plano.get("tipo_grafico"),
             "titulo": plano.get("titulo"),
             "eixo_x": plano.get("eixo_x"),
             "valores": plano.get("valores"),
-            "chart": url_imagem, # Imagem Base64
-            "sugestao": plano.get("sugestao")
+            "chart": url_imagem,  # Imagem Base64
+            "chartData": chart_data,
+            "sugestao": plano.get("sugestao"),
         })
-        
+
     except Exception as e:
         logger.error(f"Erro na rota de análise: {e}")
         return JSONResponse({
             "analise": f"⚠️ Desculpe, ocorreu um erro técnico: {str(e)}",
             "tipo_grafico": None
         }, status_code=500)
+
+
+# --- ROTAS DE HISTÓRICO (CRUD de conversas/mensagens) ---
+
+@app.get("/api/conversas")
+async def api_listar_conversas():
+    """Lista as conversas salvas (sem mensagens)."""
+    return JSONResponse({"conversas": database.listar_conversas()})
+
+
+@app.post("/api/conversas")
+async def api_criar_conversa(req: NovaConversa):
+    """Cria uma nova conversa vazia."""
+    cid = database.criar_conversa(req.titulo or "Nova conversa")
+    if not cid:
+        raise HTTPException(status_code=500, detail="Não foi possível criar a conversa.")
+    return JSONResponse({"id": cid, "titulo": req.titulo or "Nova conversa"})
+
+
+@app.get("/api/conversas/{conversa_id}")
+async def api_get_conversa(conversa_id: int):
+    """Retorna uma conversa com todas as mensagens (formato pronto para o frontend)."""
+    conv = database.get_conversa(conversa_id)
+    if not conv:
+        raise HTTPException(status_code=404, detail="Conversa não encontrada.")
+    return JSONResponse(conv)
+
+
+@app.patch("/api/conversas/{conversa_id}")
+async def api_renomear_conversa(conversa_id: int, req: RenomearConversa):
+    """Renomeia uma conversa existente."""
+    if not database.renomear_conversa(conversa_id, req.titulo):
+        raise HTTPException(status_code=500, detail="Falha ao renomear.")
+    return JSONResponse({"id": conversa_id, "titulo": req.titulo})
+
+
+@app.delete("/api/conversas/{conversa_id}")
+async def api_deletar_conversa(conversa_id: int):
+    """Remove uma conversa e todas as suas mensagens."""
+    if not database.deletar_conversa(conversa_id):
+        raise HTTPException(status_code=500, detail="Falha ao deletar.")
+    return JSONResponse({"ok": True, "id": conversa_id})
 
 # --- EXECUÇÃO ---
 
