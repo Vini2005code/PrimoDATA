@@ -11,8 +11,20 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Inicializa o cliente da Groq
-client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+# Inicializa o cliente da Groq de forma preguiçosa para permitir que o app
+# suba mesmo sem a chave configurada (a rota de análise retornará erro amigável).
+_client = None
+
+def _get_client():
+    global _client
+    if _client is None:
+        api_key = os.getenv("GROQ_API_KEY")
+        if not api_key:
+            raise RuntimeError(
+                "GROQ_API_KEY não configurada. Defina a variável de ambiente para habilitar a IA."
+            )
+        _client = Groq(api_key=api_key)
+    return _client
 
 def planejar_grafico(contexto_clinico, pergunta_medico):
     """
@@ -54,7 +66,7 @@ def planejar_grafico(contexto_clinico, pergunta_medico):
 
     try:
         # Chamada para o modelo Llama 3.3
-        response = client.chat.completions.create(
+        response = _get_client().chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=[
                 {"role": "system", "content": "Você é um Analista de Dados Clínicos especializado em hospitais brasileiros. Responda sempre em JSON."},
