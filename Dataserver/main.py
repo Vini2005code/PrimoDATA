@@ -16,6 +16,8 @@ from pydantic import BaseModel
 # Importação dos seus módulos internos
 import database
 import Analise_primo as ai_engine
+import pdf_export
+from fastapi.responses import Response
 
 # --- CONFIGURAÇÃO INICIAL ---
 
@@ -178,15 +180,24 @@ async def api_analisar(req: RequisicaoChat):
                 sugestao=plano.get("sugestao"),
             )
 
-        # 6. Retorno padronizado para o JavaScript (script.js) + conversa_id
+        # 6. Retorno padronizado: novo schema (title/type/labels/values/suggested_insight)
+        #    + campos legados para compatibilidade.
+        tipo = plano.get("tipo_grafico")
         return JSONResponse({
             "conversa_id": conversa_id,
             "analise": plano.get("analise", "Análise concluída."),
-            "tipo_grafico": plano.get("tipo_grafico"),
+            # Novo schema (Recharts/Lovable):
+            "title": plano.get("titulo"),
+            "type": tipo if tipo and tipo != "null" else None,
+            "labels": plano.get("eixo_x") or [],
+            "values": plano.get("valores") or [],
+            "suggested_insight": plano.get("suggested_insight") or plano.get("sugestao"),
+            # Compatibilidade:
+            "tipo_grafico": tipo,
             "titulo": plano.get("titulo"),
             "eixo_x": plano.get("eixo_x"),
             "valores": plano.get("valores"),
-            "chart": url_imagem,  # Imagem Base64
+            "chart": url_imagem,
             "chartData": chart_data,
             "sugestao": plano.get("sugestao"),
         })
@@ -265,6 +276,35 @@ async def api_deletar_dashboard_chart(chart_id: int):
     if not database.deletar_dashboard_chart(chart_id):
         raise HTTPException(status_code=500, detail="Falha ao remover gráfico.")
     return JSONResponse({"ok": True, "id": chart_id})
+
+
+@app.get("/api/dashboard/export-pdf")
+async def api_export_dashboard_pdf():
+    """Gera um PDF com todos os gráficos fixados, em alta resolução."""
+    try:
+        charts = database.listar_dashboard_charts()
+        pdf_bytes = pdf_export.gerar_pdf_dashboard(
+            charts,
+            titulo_relatorio="Relatório Clínico - Dashboard",
+            analise_texto=(
+                "Visão consolidada dos indicadores fixados pela equipe clínica. "
+                "Os gráficos a seguir refletem o estado atual da base de pacientes."
+            ),
+        )
+        filename = f"mitra-med-dashboard-{datetime_now_str()}.pdf"
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        )
+    except Exception as e:
+        logger.error(f"Erro ao gerar PDF do dashboard: {e}")
+        raise HTTPException(status_code=500, detail="Falha ao gerar PDF.")
+
+
+def datetime_now_str() -> str:
+    from datetime import datetime
+    return datetime.now().strftime("%Y%m%d-%H%M")
 
 
 # --- EXECUÇÃO ---

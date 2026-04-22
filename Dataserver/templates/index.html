@@ -122,6 +122,9 @@
                         <span id="pinnedCount">0</span>/<span id="pinnedLimit">10</span>
                     </p>
                 </div>
+                <button class="btn-primary btn-export" onclick="exportarPdf()">
+                    <i class="fas fa-file-pdf"></i> Exportar PDF
+                </button>
             </div>
             <div class="pinned-grid" id="pinnedGrid">
                 <div class="pinned-empty">Nenhum gráfico fixado ainda.</div>
@@ -266,40 +269,113 @@
         area.scrollTop = area.scrollHeight;
     }
 
-    function renderChart(canvasId, data) {
-        const el = document.getElementById(canvasId);
-        if (!el) return;
+    // ============== renderModernChart ==============
+    // Paleta HSL alinhada à do projeto Lovable (primary, accent, success...).
+    const MITRA_PALETTE = [
+        'hsl(210, 78%, 46%)',  // primary
+        'hsl(168, 76%, 42%)',  // accent
+        'hsl(38, 92%, 50%)',   // warning
+        'hsl(0, 84%, 60%)',    // destructive
+        'hsl(262, 80%, 50%)',  // purple
+        'hsl(142, 76%, 36%)'   // success
+    ];
+
+    // Mantém referência dos charts ativos para evitar leak de canvas.
+    const _modernCharts = new Map();
+
+    function renderModernChart(containerId, chartData) {
+        const el = document.getElementById(containerId);
+        if (!el || !chartData) return null;
+
+        // Destrói instância antiga se existir
+        if (_modernCharts.has(containerId)) {
+            try { _modernCharts.get(containerId).destroy(); } catch(_) {}
+        }
+
         const ctx = el.getContext('2d');
-        new Chart(ctx, {
-            type: data.type === 'donut' ? 'doughnut' : data.type,
-            data: {
-                labels: data.labels,
-                datasets: [{
-                    label: data.title,
-                    data: data.values,
-                    backgroundColor: [
-                        'hsl(210, 78%, 46%)',
-                        'hsl(168, 76%, 42%)',
-                        'hsl(38, 92%, 50%)',
-                        'hsl(0, 84%, 60%)',
-                        'hsl(262, 80%, 50%)',
-                        'hsl(142, 76%, 36%)'
-                    ],
-                    borderRadius: 6,
-                    borderWidth: 0,
-                    hoverOffset: 12
-                }]
-            },
+        const tipo = chartData.type === 'donut' ? 'doughnut' : (chartData.type || 'bar');
+        const labels = chartData.labels || [];
+        const values = chartData.values || [];
+        const cores = labels.map((_, i) => MITRA_PALETTE[i % MITRA_PALETTE.length]);
+
+        const isCircular = tipo === 'doughnut' || tipo === 'pie';
+        const isLine = tipo === 'line';
+
+        const dataset = {
+            label: chartData.title || 'Gráfico',
+            data: values,
+            backgroundColor: isLine ? 'hsla(210, 78%, 46%, 0.15)' : cores,
+            borderColor: isLine ? 'hsl(210, 78%, 46%)' : (isCircular ? '#ffffff' : cores),
+            borderWidth: isLine ? 2.5 : (isCircular ? 2 : 0),
+            borderRadius: isCircular || isLine ? 0 : 6,
+            hoverOffset: isCircular ? 14 : 0,
+            tension: isLine ? 0.35 : 0,
+            fill: isLine,
+            pointRadius: isLine ? 4 : 0,
+            pointBackgroundColor: 'hsl(210, 78%, 46%)',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2
+        };
+
+        const chart = new Chart(ctx, {
+            type: tipo,
+            data: { labels, datasets: [dataset] },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: { position: 'bottom', labels: { usePointStyle: true, padding: 14, font: { size: 12 } } }
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 14,
+                            color: 'hsl(215, 16%, 35%)',
+                            font: { size: 12, family: 'Inter, sans-serif', weight: '500' }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'hsla(222, 47%, 11%, 0.95)',
+                        titleColor: '#ffffff',
+                        bodyColor: '#e5e7eb',
+                        titleFont: { size: 12, weight: '600', family: 'Inter, sans-serif' },
+                        bodyFont: { size: 12, family: 'Inter, sans-serif' },
+                        padding: 10,
+                        cornerRadius: 8,
+                        displayColors: true,
+                        boxPadding: 4,
+                        borderColor: 'hsla(210, 78%, 46%, 0.4)',
+                        borderWidth: 1,
+                        callbacks: {
+                            label: function(ctx) {
+                                const v = ctx.parsed?.y ?? ctx.parsed;
+                                const total = ctx.dataset.data.reduce((a,b)=>a+(+b||0),0);
+                                const pct = total ? ((v/total)*100).toFixed(1) : '0';
+                                return ` ${ctx.label}: ${v}` + (isCircular ? `  (${pct}%)` : '');
+                            }
+                        }
+                    }
                 },
-                animation: { duration: 1200, easing: 'easeOutQuart' }
+                scales: isCircular ? {} : {
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: 'hsl(215, 16%, 47%)', font: { family: 'Inter, sans-serif', size: 11 } }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'hsl(214, 32%, 91%)', borderDash: [4,4] },
+                        ticks: { color: 'hsl(215, 16%, 47%)', font: { family: 'Inter, sans-serif', size: 11 } }
+                    }
+                },
+                animation: { duration: 1500, easing: 'easeOutQuart' }
             }
         });
+
+        _modernCharts.set(containerId, chart);
+        return chart;
     }
+
+    // Alias retrocompatível (chamadas antigas).
+    const renderChart = renderModernChart;
 
     // ============== ENVIAR PERGUNTA ==============
     function enviar(texto) {
@@ -422,6 +498,11 @@
             console.error(e);
             grid.innerHTML = '<div class="pinned-empty">Erro ao carregar gráficos.</div>';
         }
+    }
+
+    function exportarPdf() {
+        // Endpoint backend gera o PDF (matplotlib HD + reportlab) e força download.
+        window.location.href = '/api/dashboard/export-pdf';
     }
 
     async function removerGraficoFixado(id) {

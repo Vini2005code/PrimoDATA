@@ -60,7 +60,8 @@ def planejar_grafico(contexto_clinico, pergunta_medico):
       "titulo": "Título curto do gráfico",
       "eixo_x": ["Legenda A", "Legenda B"],
       "valores": [10, 20],
-      "sugestao": "Um insight clínico preventivo baseado nos dados."
+      "sugestao": "Um insight clínico preventivo baseado nos dados.",
+      "suggested_insight": "Recomendação acionável curta para o médico (1 frase)."
     }}
     """
 
@@ -95,7 +96,9 @@ def planejar_grafico(contexto_clinico, pergunta_medico):
             "titulo": dados_limpos.get("titulo", "Análise Mitra Med"),
             "eixo_x": dados_limpos.get("eixo_x", []),
             "valores": dados_limpos.get("valores", []),
-            "sugestao": dados_limpos.get("sugestao", "")
+            "sugestao": dados_limpos.get("sugestao", ""),
+            "suggested_insight": dados_limpos.get("suggested_insight")
+                                 or dados_limpos.get("sugestao", "")
         }
 
     except Exception as e:

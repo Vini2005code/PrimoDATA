@@ -436,7 +436,8 @@ button { font-family: inherit; }
 .card.placeholder i { font-size: 1.6rem; color: hsl(var(--muted-foreground) / .8); }
 
 /* Pinned charts grid */
-.dash-section-head { margin-top: 2rem; display: flex; align-items: flex-end; justify-content: space-between; }
+.dash-section-head { margin-top: 2rem; display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.btn-export { padding: .5rem .85rem; font-size: .82rem; }
 .pinned-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
