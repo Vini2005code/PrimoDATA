@@ -23,20 +23,27 @@
             <small>Inteligência Clínica</small>
         </div>
     </div>
-    <nav class="nav">
-        <a href="#" class="nav-link active" data-view="chat"><i class="far fa-comment"></i> Chat</a>
-        <a href="#" class="nav-link" data-view="dashboard"><i class="fas fa-chart-column"></i> Dashboard</a>
-        <a href="#" class="nav-link" data-view="patients"><i class="fas fa-user-injured"></i> Pacientes</a>
-    </nav>
 </header>
 
 <div class="app">
-    <!-- ========== SIDEBAR (conversas) ========== -->
+    <!-- ========== SIDEBAR ========== -->
     <aside class="sidebar" id="sidebar">
-        <button class="btn-primary new-conv" onclick="novaConversa()">
-            <i class="fas fa-plus"></i> Nova conversa
-        </button>
-        <div class="conv-list" id="convList"></div>
+        <nav class="side-nav">
+            <a href="#" class="side-link active" data-view="chat">
+                <i class="far fa-comment"></i> <span>Chat</span>
+            </a>
+            <a href="#" class="side-link" data-view="dashboard">
+                <i class="fas fa-chart-column"></i> <span>Dashboard</span>
+            </a>
+        </nav>
+
+        <div class="side-section" id="sideChatSection">
+            <button class="btn-primary new-conv" onclick="novaConversa()">
+                <i class="fas fa-plus"></i> Nova conversa
+            </button>
+            <div class="side-section-label">Conversas</div>
+            <div class="conv-list" id="convList"></div>
+        </div>
     </aside>
 
     <!-- ========== MAIN ========== -->
@@ -113,18 +120,6 @@
             </div>
         </section>
 
-        <!-- ===== PATIENTS VIEW (placeholder) ===== -->
-        <section class="view view-patients" id="view-patients" hidden>
-            <div class="page-header">
-                <h1>Pacientes</h1>
-                <p class="muted">Gestão de pacientes — em breve.</p>
-            </div>
-            <div class="card placeholder">
-                <i class="fas fa-folder-open"></i>
-                <p>Cadastro e edição de pacientes serão habilitados em uma próxima etapa.</p>
-            </div>
-        </section>
-
     </main>
 </div>
 
@@ -136,16 +131,17 @@
     let isLoading = false;
 
     // ============== NAVIGATION ==============
-    document.querySelectorAll('.nav-link').forEach(a => {
+    document.querySelectorAll('.side-link').forEach(a => {
         a.addEventListener('click', e => {
             e.preventDefault();
             const view = a.dataset.view;
-            document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
+            document.querySelectorAll('.side-link').forEach(n => n.classList.remove('active'));
             a.classList.add('active');
             document.querySelectorAll('.view').forEach(v => v.hidden = true);
-            document.getElementById('view-' + view).hidden = false;
-            // Sidebar só faz sentido no chat
-            document.getElementById('sidebar').style.display = (view === 'chat') ? '' : 'none';
+            const target = document.getElementById('view-' + view);
+            if (target) target.hidden = false;
+            // Lista de conversas só aparece quando estamos no Chat
+            document.getElementById('sideChatSection').style.display = (view === 'chat') ? '' : 'none';
         });
     });
 
