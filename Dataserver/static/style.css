@@ -285,9 +285,41 @@ button { font-family: inherit; }
 }
 .chart-card-header {
     display: flex; align-items: center; justify-content: space-between;
+    gap: .5rem;
     padding: .75rem 1rem .25rem;
 }
 .chart-title { font-size: .9rem; font-weight: 600; color: hsl(var(--foreground)); }
+
+.btn-pin, .btn-remove {
+    background: transparent;
+    border: 1px solid hsl(var(--border));
+    color: hsl(var(--muted-foreground));
+    border-radius: .5rem;
+    padding: .3rem .55rem;
+    font-size: .72rem; font-weight: 500;
+    cursor: pointer;
+    display: inline-flex; align-items: center; gap: 4px;
+    transition: background 120ms, color 120ms, border-color 120ms;
+}
+.btn-pin:hover {
+    background: hsl(var(--primary) / .08);
+    color: hsl(var(--primary));
+    border-color: hsl(var(--primary) / .4);
+}
+.btn-pin:disabled, .btn-pin-done {
+    background: hsl(var(--medical-success) / .12);
+    color: hsl(var(--medical-success));
+    border-color: hsl(var(--medical-success) / .35);
+    cursor: default;
+}
+.btn-remove {
+    width: 28px; height: 28px; padding: 0; justify-content: center;
+}
+.btn-remove:hover {
+    background: hsl(var(--destructive) / .1);
+    color: hsl(var(--destructive));
+    border-color: hsl(var(--destructive) / .35);
+}
 .chart-canvas-wrap {
     padding: .5rem 1rem 1rem;
     height: 280px;
@@ -402,6 +434,25 @@ button { font-family: inherit; }
     text-align: center;
 }
 .card.placeholder i { font-size: 1.6rem; color: hsl(var(--muted-foreground) / .8); }
+
+/* Pinned charts grid */
+.dash-section-head { margin-top: 2rem; display: flex; align-items: flex-end; justify-content: space-between; }
+.pinned-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1rem;
+}
+.pinned-card { width: 100%; }
+.pinned-empty {
+    grid-column: 1 / -1;
+    padding: 2rem 1rem;
+    text-align: center;
+    color: hsl(var(--muted-foreground));
+    background: hsl(var(--card));
+    border: 1px dashed hsl(var(--border));
+    border-radius: var(--radius);
+    font-size: .85rem;
+}
 
 /* ==========================================================================
    RESPONSIVE

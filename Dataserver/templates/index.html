@@ -114,9 +114,17 @@
                 </div>
             </div>
 
-            <div class="page-header" style="margin-top:2rem;">
-                <h2 style="font-size:1.1rem;">Diagnósticos únicos</h2>
-                <p class="muted">{{ diagnosticos_unicos }} categorias distintas detectadas.</p>
+            <div class="page-header dash-section-head">
+                <div>
+                    <h2 style="font-size:1.1rem;">Gráficos fixados</h2>
+                    <p class="muted">
+                        Fixe gráficos do chat aqui para acompanhar.
+                        <span id="pinnedCount">0</span>/<span id="pinnedLimit">10</span>
+                    </p>
+                </div>
+            </div>
+            <div class="pinned-grid" id="pinnedGrid">
+                <div class="pinned-empty">Nenhum gráfico fixado ainda.</div>
             </div>
         </section>
 
@@ -140,8 +148,8 @@
             document.querySelectorAll('.view').forEach(v => v.hidden = true);
             const target = document.getElementById('view-' + view);
             if (target) target.hidden = false;
-            // Lista de conversas só aparece quando estamos no Chat
             document.getElementById('sideChatSection').style.display = (view === 'chat') ? '' : 'none';
+            if (view === 'dashboard') carregarDashboardCharts();
         });
     });
 
@@ -230,10 +238,15 @@
             const wrap = document.createElement('div');
             wrap.className = `msg-row ${m.role}`;
             const chartId = `chart-${activeConvId}-${idx}`;
+            const chartPayload = m.hasChart && m.chartData ? encodeURIComponent(JSON.stringify(m.chartData)) : '';
             const chartCard = m.hasChart && m.chartData ? `
                 <div class="chart-card">
                     <div class="chart-card-header">
                         <span class="chart-title">${escapeHtml(m.chartData.title || 'Gráfico')}</span>
+                        <button class="btn-pin" title="Fixar no Dashboard"
+                                onclick='fixarGrafico(decodeURIComponent("${chartPayload}"), this)'>
+                            <i class="fas fa-thumbtack"></i> Fixar
+                        </button>
                     </div>
                     <div class="chart-canvas-wrap"><canvas id="${chartId}"></canvas></div>
                 </div>` : '';
@@ -357,6 +370,66 @@
             document.getElementById('btnSend').disabled = false;
             renderMessages();
         }
+    }
+
+    // ============== DASHBOARD CHARTS (fixar / listar / remover) ==============
+    async function fixarGrafico(chartDataJson, btn) {
+        try {
+            const chartData = JSON.parse(chartDataJson);
+            const r = await fetch('/api/dashboard/charts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ chartData })
+            });
+            if (!r.ok) {
+                const err = await r.json().catch(() => ({}));
+                alert(err.detail || 'Não foi possível fixar.');
+                return;
+            }
+            if (btn) {
+                btn.innerHTML = '<i class="fas fa-check"></i> Fixado';
+                btn.disabled = true;
+                btn.classList.add('btn-pin-done');
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    async function carregarDashboardCharts() {
+        const grid = document.getElementById('pinnedGrid');
+        try {
+            const data = await api('GET', '/api/dashboard/charts');
+            const charts = data.charts || [];
+            document.getElementById('pinnedCount').textContent = charts.length;
+            document.getElementById('pinnedLimit').textContent = data.limite || 10;
+
+            if (!charts.length) {
+                grid.innerHTML = '<div class="pinned-empty">Nenhum gráfico fixado ainda. Use o botão "Fixar" nos gráficos do chat.</div>';
+                return;
+            }
+            grid.innerHTML = charts.map(c => `
+                <div class="chart-card pinned-card">
+                    <div class="chart-card-header">
+                        <span class="chart-title">${escapeHtml(c.titulo || (c.chartData && c.chartData.title) || 'Gráfico')}</span>
+                        <button class="btn-remove" onclick="removerGraficoFixado(${c.id})" title="Remover">
+                            <i class="fas fa-xmark"></i>
+                        </button>
+                    </div>
+                    <div class="chart-canvas-wrap"><canvas id="pin-${c.id}"></canvas></div>
+                </div>
+            `).join('');
+            charts.forEach(c => setTimeout(() => renderChart('pin-' + c.id, c.chartData), 30));
+        } catch (e) {
+            console.error(e);
+            grid.innerHTML = '<div class="pinned-empty">Erro ao carregar gráficos.</div>';
+        }
+    }
+
+    async function removerGraficoFixado(id) {
+        if (!confirm('Remover este gráfico do dashboard?')) return;
+        try {
+            await api('DELETE', '/api/dashboard/charts/' + id);
+            carregarDashboardCharts();
+        } catch (e) { console.error(e); }
     }
 
     function escapeHtml(s) {

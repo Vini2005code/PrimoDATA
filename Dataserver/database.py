@@ -144,7 +144,17 @@ CREATE TABLE IF NOT EXISTS mensagens (
 
 CREATE INDEX IF NOT EXISTS idx_mensagens_conversa
     ON mensagens (conversa_id, criada_em);
+
+CREATE TABLE IF NOT EXISTS dashboard_charts (
+    id SERIAL PRIMARY KEY,
+    titulo VARCHAR(200) NOT NULL DEFAULT 'Gráfico',
+    chart_data JSONB NOT NULL,
+    posicao INTEGER NOT NULL DEFAULT 0,
+    criada_em TIMESTAMP NOT NULL DEFAULT NOW()
+);
 """
+
+DASHBOARD_CHART_LIMIT = 10
 
 
 def init_chat_schema() -> None:
@@ -327,3 +337,83 @@ def adicionar_mensagem(
     except Exception as e:
         logger.error(f"Erro ao adicionar mensagem na conversa {conversa_id}: {e}")
         return None
+
+# =============================================================================
+# DASHBOARD CHARTS (gráficos fixados pelo usuário, máx. DASHBOARD_CHART_LIMIT)
+# =============================================================================
+
+def listar_dashboard_charts() -> list[dict]:
+    try:
+        with engine.connect() as conn:
+            rows = conn.execute(
+                text(
+                    "SELECT id, titulo, chart_data, posicao, criada_em "
+                    "FROM dashboard_charts ORDER BY posicao ASC, id ASC"
+                )
+            ).fetchall()
+            return [
+                {
+                    "id": r[0],
+                    "titulo": r[1],
+                    "chartData": r[2],
+                    "posicao": r[3],
+                    "criada_em": r[4].isoformat() if r[4] else None,
+                }
+                for r in rows
+            ]
+    except Exception as e:
+        logger.error(f"Erro ao listar dashboard_charts: {e}")
+        return []
+
+
+def contar_dashboard_charts() -> int:
+    try:
+        with engine.connect() as conn:
+            row = conn.execute(text("SELECT COUNT(*) FROM dashboard_charts")).fetchone()
+            return row[0] if row else 0
+    except Exception as e:
+        logger.error(f"Erro ao contar dashboard_charts: {e}")
+        return 0
+
+
+def adicionar_dashboard_chart(titulo: str, chart_data: dict) -> dict:
+    """Insere um chart no dashboard. Retorna {'ok':bool, 'id':int|None, 'erro':str|None}."""
+    if not chart_data or not chart_data.get("type"):
+        return {"ok": False, "id": None, "erro": "chartData inválido"}
+    try:
+        with engine.begin() as conn:
+            total = conn.execute(text("SELECT COUNT(*) FROM dashboard_charts")).scalar() or 0
+            if total >= DASHBOARD_CHART_LIMIT:
+                return {
+                    "ok": False,
+                    "id": None,
+                    "erro": f"Limite de {DASHBOARD_CHART_LIMIT} gráficos atingido.",
+                }
+            row = conn.execute(
+                text(
+                    "INSERT INTO dashboard_charts (titulo, chart_data, posicao) "
+                    "VALUES (:t, CAST(:cd AS JSONB), :p) RETURNING id"
+                ),
+                {
+                    "t": (titulo or "Gráfico")[:200],
+                    "cd": json.dumps(chart_data),
+                    "p": total,
+                },
+            ).fetchone()
+            return {"ok": True, "id": row[0] if row else None, "erro": None}
+    except Exception as e:
+        logger.error(f"Erro ao adicionar dashboard_chart: {e}")
+        return {"ok": False, "id": None, "erro": "erro interno"}
+
+
+def deletar_dashboard_chart(chart_id: int) -> bool:
+    try:
+        with engine.begin() as conn:
+            conn.execute(
+                text("DELETE FROM dashboard_charts WHERE id = :id"),
+                {"id": chart_id},
+            )
+            return True
+    except Exception as e:
+        logger.error(f"Erro ao deletar dashboard_chart {chart_id}: {e}")
+        return False

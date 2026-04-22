@@ -52,6 +52,18 @@ class RenomearConversa(BaseModel):
     titulo: str
 
 
+class ChartDataIn(BaseModel):
+    type: str
+    title: Optional[str] = ""
+    labels: list = []
+    values: list = []
+
+
+class FixarChartIn(BaseModel):
+    titulo: Optional[str] = None
+    chartData: ChartDataIn
+
+
 # Garante que as tabelas de histórico existem ao iniciar o app
 @app.on_event("startup")
 def _startup_chat_schema():
@@ -227,6 +239,33 @@ async def api_deletar_conversa(conversa_id: int):
     if not database.deletar_conversa(conversa_id):
         raise HTTPException(status_code=500, detail="Falha ao deletar.")
     return JSONResponse({"ok": True, "id": conversa_id})
+
+# --- ROTAS DO DASHBOARD (gráficos fixados, máx. 10) ---
+
+@app.get("/api/dashboard/charts")
+async def api_listar_dashboard_charts():
+    return JSONResponse({
+        "charts": database.listar_dashboard_charts(),
+        "limite": database.DASHBOARD_CHART_LIMIT,
+    })
+
+
+@app.post("/api/dashboard/charts")
+async def api_fixar_dashboard_chart(req: FixarChartIn):
+    cd = req.chartData.model_dump()
+    titulo = req.titulo or cd.get("title") or "Gráfico"
+    res = database.adicionar_dashboard_chart(titulo, cd)
+    if not res["ok"]:
+        raise HTTPException(status_code=400, detail=res["erro"] or "Falha ao fixar gráfico.")
+    return JSONResponse({"id": res["id"], "titulo": titulo})
+
+
+@app.delete("/api/dashboard/charts/{chart_id}")
+async def api_deletar_dashboard_chart(chart_id: int):
+    if not database.deletar_dashboard_chart(chart_id):
+        raise HTTPException(status_code=500, detail="Falha ao remover gráfico.")
+    return JSONResponse({"ok": True, "id": chart_id})
+
 
 # --- EXECUÇÃO ---
 
