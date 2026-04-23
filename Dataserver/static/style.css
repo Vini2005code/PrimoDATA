@@ -292,6 +292,32 @@ button { font-family: inherit; }
 
 .chart-actions { display: flex; gap: .35rem; align-items: center; }
 
+.topbar-user { display:flex; align-items:center; gap:.6rem; margin-left:auto; }
+.user-chip {
+    display:inline-flex; align-items:center; gap:.4rem;
+    padding:.35rem .65rem; border-radius:999px;
+    background: hsl(var(--muted) / .6);
+    color: hsl(var(--muted-foreground));
+    font-size:.8rem; font-weight:500;
+}
+.btn-logout {
+    background: transparent;
+    border: 1px solid hsl(var(--border));
+    color: hsl(var(--muted-foreground));
+    border-radius: .55rem;
+    padding: .35rem .7rem;
+    font-size: .78rem;
+    font-weight: 500;
+    cursor: pointer;
+    display:inline-flex; align-items:center; gap:.35rem;
+    transition: background 120ms, color 120ms, border-color 120ms;
+}
+.btn-logout:hover {
+    background: hsl(0 84% 60% / .08);
+    color: hsl(0 72% 42%);
+    border-color: hsl(0 84% 60% / .4);
+}
+
 .btn-pdf:hover {
     background: hsl(var(--accent) / .12) !important;
     color: hsl(var(--accent)) !important;

@@ -3,16 +3,22 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
+from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import JSONResponse, Response
 
+from app.api.deps import require_user
 from app.core.logging_setup import get_logger
 from app.schemas.chat import ExportChartIn, FixarChartIn
 from app.services import dashboard_charts
 from app.services.pdf_report import gerar_pdf_chart, gerar_pdf_dashboard
 
 logger = get_logger(__name__)
-router = APIRouter(prefix="/api/dashboard", tags=["dashboard"])
+router = APIRouter(
+    prefix="/api/dashboard",
+    tags=["dashboard"],
+    dependencies=[Depends(require_user)],
+)
 
 
 def _ts() -> str:
@@ -64,10 +70,11 @@ async def export_dashboard_pdf():
     """PDF consolidado de todos os gráficos fixados."""
     try:
         charts = dashboard_charts.listar()
-        pdf_bytes = gerar_pdf_dashboard(
+        pdf_bytes = await run_in_threadpool(
+            gerar_pdf_dashboard,
             charts,
-            titulo_relatorio="Relatório Clínico - Dashboard",
-            analise_texto=(
+            "Relatório Clínico - Dashboard",
+            (
                 "Visão consolidada dos indicadores fixados pela equipe clínica. "
                 "Os gráficos a seguir refletem o estado atual da base de pacientes."
             ),
@@ -90,9 +97,10 @@ async def export_pinned_chart_pdf(chart_id: int):
     if not chart:
         raise HTTPException(status_code=404, detail="Gráfico não encontrado.")
     try:
-        pdf_bytes = gerar_pdf_chart(
-            chart_data=chart["chartData"] or {},
-            titulo=chart.get("titulo"),
+        pdf_bytes = await run_in_threadpool(
+            gerar_pdf_chart,
+            chart["chartData"] or {},
+            chart.get("titulo"),
         )
         filename = f"mitra-med-{_slug(chart.get('titulo') or '')}-{_ts()}.pdf"
         return Response(
@@ -114,11 +122,12 @@ async def export_chart_inline_pdf(req: ExportChartIn):
                             detail="chartData inválido (faltam labels/values/type).")
     try:
         titulo = req.titulo or cd.get("title") or "Gráfico"
-        pdf_bytes = gerar_pdf_chart(
-            chart_data=cd,
-            titulo=titulo,
-            suggested_insight=req.suggested_insight,
-            analise=req.analise,
+        pdf_bytes = await run_in_threadpool(
+            gerar_pdf_chart,
+            cd,
+            titulo,
+            req.suggested_insight,
+            req.analise,
         )
         filename = f"mitra-med-{_slug(titulo)}-{_ts()}.pdf"
         return Response(

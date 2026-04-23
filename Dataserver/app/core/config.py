@@ -22,6 +22,13 @@ def _build_db_url() -> str:
     return f"postgresql://{user}:{pwd}@{host}:{port}/{name}"
 
 
+def _bool_env(name: str, default: bool) -> bool:
+    v = os.getenv(name)
+    if v is None:
+        return default
+    return v.strip().lower() in ("1", "true", "yes", "on")
+
+
 @dataclass(frozen=True)
 class Settings:
     database_url: str = field(default_factory=_build_db_url)
@@ -30,14 +37,30 @@ class Settings:
     # Limites operacionais
     max_patients_context: int = 100
     dashboard_chart_limit: int = 10
+    chart_max_points: int = 200
+    chart_label_max_len: int = 120
+    schema_cache_ttl: int = 60
 
     # LGPD: colunas que NUNCA podem ir para a IA / contexto
     lgpd_blacklist: tuple[str, ...] = (
-        "nome", "cpf", "rg", "telefone", "email", "endereco",
+        "nome", "cpf", "rg", "telefone", "email", "endereco", "endereço",
+        "profissao", "profissão", "naturalidade", "mae", "mãe", "pai",
+        "responsavel", "responsável", "observacoes", "observações",
+        "anamnese", "prontuario", "prontuário",
     )
 
+    # Autenticação
+    auth_enabled: bool = field(default_factory=lambda: _bool_env("AUTH_ENABLED", True))
+    jwt_secret: str | None = field(default_factory=lambda: os.getenv("JWT_SECRET"))
+    jwt_expire_minutes: int = field(
+        default_factory=lambda: int(os.getenv("JWT_EXPIRE_MINUTES", "720"))
+    )
+    cookie_secure: bool = field(default_factory=lambda: _bool_env("COOKIE_SECURE", False))
+    admin_username: str | None = field(default_factory=lambda: os.getenv("ADMIN_USERNAME"))
+    admin_password: str | None = field(default_factory=lambda: os.getenv("ADMIN_PASSWORD"))
+
     app_title: str = "Mitra Med — Inteligência Clínica"
-    app_version: str = "2.1"
+    app_version: str = "2.2"
 
 
 settings = Settings()

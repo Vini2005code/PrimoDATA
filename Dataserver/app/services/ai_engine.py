@@ -5,6 +5,7 @@ Mantém um cliente lazy (a app sobe sem chave; só falha quando alguém chama).
 from __future__ import annotations
 
 import json
+import re
 
 from groq import Groq
 
@@ -12,6 +13,25 @@ from app.core.config import settings
 from app.core.logging_setup import get_logger
 
 logger = get_logger(__name__)
+audit = get_logger("mitra.lgpd.audit")
+
+# Regex de PII brasileiros — aplicadas na pergunta do médico antes de
+# enviar à Groq, para reduzir vazamento acidental de dados pessoais.
+_PII_PATTERNS = [
+    (re.compile(r"\b\d{3}\.?\d{3}\.?\d{3}-?\d{2}\b"), "[CPF_REMOVIDO]"),
+    (re.compile(r"\b\d{2}\.?\d{3}\.?\d{3}/?\d{4}-?\d{2}\b"), "[CNPJ_REMOVIDO]"),
+    (re.compile(r"\b(?:\+?55\s?)?\(?\d{2}\)?\s?9?\d{4}-?\d{4}\b"), "[TELEFONE_REMOVIDO]"),
+    (re.compile(r"[\w.+-]+@[\w-]+\.[\w.-]+"), "[EMAIL_REMOVIDO]"),
+]
+
+
+def _mask_pii(text: str) -> str:
+    if not text:
+        return text
+    out = text
+    for pattern, replacement in _PII_PATTERNS:
+        out = pattern.sub(replacement, out)
+    return out
 
 _client: Groq | None = None
 _MODEL = "llama-3.3-70b-versatile"
@@ -63,8 +83,13 @@ Responda APENAS o objeto JSON abaixo, sem textos antes ou depois:
 
 def planejar_grafico(contexto_clinico: str, pergunta_medico: str) -> dict:
     """Decide se a resposta é texto puro ou texto + gráfico."""
+    pergunta_segura = _mask_pii(pergunta_medico or "")
+    if pergunta_segura != pergunta_medico:
+        audit.warning("PII detectada e mascarada antes do envio à IA.")
+    audit.info(f"Consulta IA: '{pergunta_segura[:120]}'")
+
     prompt = _PROMPT_TEMPLATE.format(
-        contexto=contexto_clinico, pergunta=pergunta_medico
+        contexto=contexto_clinico, pergunta=pergunta_segura
     )
 
     try:

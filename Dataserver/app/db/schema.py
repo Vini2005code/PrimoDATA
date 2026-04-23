@@ -31,6 +31,13 @@ CREATE TABLE IF NOT EXISTS mensagens (
 CREATE INDEX IF NOT EXISTS idx_mensagens_conversa
     ON mensagens (conversa_id, criada_em);
 
+CREATE TABLE IF NOT EXISTS usuarios (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(80) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    criado_em TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
 CREATE TABLE IF NOT EXISTS dashboard_charts (
     id SERIAL PRIMARY KEY,
     titulo VARCHAR(200) NOT NULL DEFAULT 'Gráfico',

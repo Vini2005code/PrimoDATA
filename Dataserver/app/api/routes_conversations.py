@@ -1,13 +1,18 @@
 """CRUD HTTP de conversas."""
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
 
+from app.api.deps import require_user
 from app.schemas.chat import NovaConversa, RenomearConversa
 from app.services import conversations
 
-router = APIRouter(prefix="/api/conversas", tags=["conversas"])
+router = APIRouter(
+    prefix="/api/conversas",
+    tags=["conversas"],
+    dependencies=[Depends(require_user)],
+)
 
 
 @router.get("")

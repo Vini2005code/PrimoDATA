@@ -4,6 +4,7 @@ from __future__ import annotations
 import pandas as pd
 from sqlalchemy import inspect, text
 
+from app.core.cache import ttl_cache
 from app.core.config import settings
 from app.core.logging_setup import get_logger
 from app.db.engine import engine
@@ -11,12 +12,17 @@ from app.db.engine import engine
 logger = get_logger(__name__)
 
 
+@ttl_cache(seconds=settings.schema_cache_ttl)
+def _all_columns() -> list[str]:
+    """Lista crua das colunas de `pacientes` (cacheado por TTL)."""
+    inspector = inspect(engine)
+    return [c["name"] for c in inspector.get_columns("pacientes")]
+
+
 def _safe_columns() -> list[str]:
     """Retorna apenas colunas que NÃO estão na blacklist LGPD."""
-    inspector = inspect(engine)
-    cols = [c["name"] for c in inspector.get_columns("pacientes")]
     blacklist = {b.lower() for b in settings.lgpd_blacklist}
-    return [c for c in cols if c.lower() not in blacklist]
+    return [c for c in _all_columns() if c.lower() not in blacklist]
 
 
 def get_clinical_context() -> str:
