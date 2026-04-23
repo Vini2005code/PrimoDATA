@@ -1,4 +1,4 @@
-"""Geração de relatórios PDF do Mitra Med.
+"""Geração de relatórios PDF do Primordial DATA.
 
 Layout:
     - Cabeçalho institucional (logo/marca + data/hora)
@@ -10,7 +10,7 @@ Usado por main.py em /api/dashboard/export-pdf.
 """
 from __future__ import annotations
 
-import io
+import io 
 import logging
 from datetime import datetime
 from typing import Iterable
@@ -105,7 +105,7 @@ def _render_chart_image(chart_data: dict) -> io.BytesIO | None:
 # --------------------------------------------------------------------------
 
 LGPD_NOTICE = (
-    "Documento gerado automaticamente pelo Mitra Med · Inteligência Clínica. "
+    "Documento gerado automaticamente pelo Primordial DATA · Inteligência Clínica. "
     "Todos os dados apresentados são agregados e anonimizados em conformidade "
     "com a LGPD (Lei nº 13.709/2018). Este relatório é de uso restrito da "
     "equipe clínica responsável."
@@ -122,7 +122,7 @@ def _draw_header_footer(canvas, doc):
 
     canvas.setFillColor(colors.white)
     canvas.setFont("Helvetica-Bold", 13)
-    canvas.drawString(2 * cm, height - 0.85 * cm, "Mitra Med")
+    canvas.drawString(2 * cm, height - 0.85 * cm, "Primordial DATA")
     canvas.setFont("Helvetica", 9)
     canvas.drawString(2 * cm, height - 1.15 * cm, "Inteligência Clínica")
 
@@ -187,7 +187,7 @@ def gerar_pdf_dashboard(
         rightMargin=2 * cm,
         topMargin=1.9 * cm,
         bottomMargin=2.0 * cm,
-        title="Mitra Med - Relatório",
+        title="Primordial DATA - Relatório",
     )
 
     styles = getSampleStyleSheet()
