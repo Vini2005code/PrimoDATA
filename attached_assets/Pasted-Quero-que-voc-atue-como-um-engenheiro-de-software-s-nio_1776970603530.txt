@@ -1,0 +1,50 @@
+Quero que você atue como um engenheiro de software sênior.
+
+Analise todo o meu projeto atual dentro da pasta "Dataserver" e faça uma refatoração completa para um padrão de arquitetura profissional (nível produção), seguindo boas práticas de engenharia de software.
+
+OBJETIVO:
+Melhorar a estrutura, organização, qualidade e escalabilidade do código, SEM quebrar nenhuma funcionalidade existente.
+
+REGRAS IMPORTANTES:
+- NÃO quebre funcionalidades existentes
+- NÃO altere o comportamento do sistema (zero regressão)
+- Preserve toda lógica atual
+- Se necessário, reorganize arquivos e pastas
+- Separe responsabilidades (data, services, core, utils, etc.)
+- Elimine código duplicado
+- Melhore nomes de variáveis, funções e arquivos
+- Adicione tratamento de erros onde estiver faltando
+- Adicione validação de dados
+- Melhore legibilidade e organização geral
+
+REQUISITOS ADICIONAIS:
+
+1. Remover o ambiente virtual (.venv) do projeto:
+- Garanta que a pasta .venv não faça parte da estrutura final
+- Crie um arquivo requirements.txt com todas as dependências necessárias
+- Sugira como recriar o ambiente virtual corretamente fora do repositório
+
+2. Melhorar exportação de PDF:
+- Atualmente a exportação está apenas no dashboard
+- Modifique o sistema para permitir exportação de PDF INDIVIDUAL para cada gráfico
+- Cada gráfico deve ter sua própria função de exportação
+- Garanta que isso não quebre a funcionalidade atual do dashboard
+- Estruture isso de forma reutilizável (evitar código duplicado)
+
+ANÁLISE TÉCNICA:
+Além da refatoração, identifique:
+- Possíveis bugs futuros
+- Gargalos de performance
+- Riscos de segurança
+- Problemas de arquitetura
+
+SAÍDA ESPERADA:
+1. Nova estrutura de pastas sugerida
+2. Código refatorado (organizado por responsabilidade)
+3. Implementação da exportação de PDF por gráfico
+4. Explicação clara das melhorias feitas
+5. Lista de riscos ainda existentes
+6. Sugestões de evolução futura
+
+IMPORTANTE:
+Se alguma alteração tiver risco de quebrar o sistema, explique antes de aplicar.

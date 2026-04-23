@@ -290,6 +290,14 @@ button { font-family: inherit; }
 }
 .chart-title { font-size: .9rem; font-weight: 600; color: hsl(var(--foreground)); }
 
+.chart-actions { display: flex; gap: .35rem; align-items: center; }
+
+.btn-pdf:hover {
+    background: hsl(var(--accent) / .12) !important;
+    color: hsl(var(--accent)) !important;
+    border-color: hsl(var(--accent) / .4) !important;
+}
+
 .btn-pin, .btn-remove {
     background: transparent;
     border: 1px solid hsl(var(--border));

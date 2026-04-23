@@ -242,14 +242,21 @@
             wrap.className = `msg-row ${m.role}`;
             const chartId = `chart-${activeConvId}-${idx}`;
             const chartPayload = m.hasChart && m.chartData ? encodeURIComponent(JSON.stringify(m.chartData)) : '';
+            const sugPayload = m.sugestao ? encodeURIComponent(m.sugestao) : '';
             const chartCard = m.hasChart && m.chartData ? `
                 <div class="chart-card">
                     <div class="chart-card-header">
                         <span class="chart-title">${escapeHtml(m.chartData.title || 'Gráfico')}</span>
-                        <button class="btn-pin" title="Fixar no Dashboard"
-                                onclick='fixarGrafico(decodeURIComponent("${chartPayload}"), this)'>
-                            <i class="fas fa-thumbtack"></i> Fixar
-                        </button>
+                        <div class="chart-actions">
+                            <button class="btn-pin btn-pdf" title="Baixar PDF deste gráfico"
+                                    onclick='exportarChartPdf(decodeURIComponent("${chartPayload}"), decodeURIComponent("${sugPayload}"))'>
+                                <i class="fas fa-file-pdf"></i> PDF
+                            </button>
+                            <button class="btn-pin" title="Fixar no Dashboard"
+                                    onclick='fixarGrafico(decodeURIComponent("${chartPayload}"), this)'>
+                                <i class="fas fa-thumbtack"></i> Fixar
+                            </button>
+                        </div>
                     </div>
                     <div class="chart-canvas-wrap"><canvas id="${chartId}"></canvas></div>
                 </div>` : '';
@@ -486,9 +493,14 @@
                 <div class="chart-card pinned-card">
                     <div class="chart-card-header">
                         <span class="chart-title">${escapeHtml(c.titulo || (c.chartData && c.chartData.title) || 'Gráfico')}</span>
-                        <button class="btn-remove" onclick="removerGraficoFixado(${c.id})" title="Remover">
-                            <i class="fas fa-xmark"></i>
-                        </button>
+                        <div class="chart-actions">
+                            <button class="btn-pin btn-pdf" onclick="exportarChartFixadoPdf(${c.id})" title="Baixar PDF deste gráfico">
+                                <i class="fas fa-file-pdf"></i> PDF
+                            </button>
+                            <button class="btn-remove" onclick="removerGraficoFixado(${c.id})" title="Remover">
+                                <i class="fas fa-xmark"></i>
+                            </button>
+                        </div>
                     </div>
                     <div class="chart-canvas-wrap"><canvas id="pin-${c.id}"></canvas></div>
                 </div>
@@ -503,6 +515,38 @@
     function exportarPdf() {
         // Endpoint backend gera o PDF (matplotlib HD + reportlab) e força download.
         window.location.href = '/api/dashboard/export-pdf';
+    }
+
+    // ---------- PDF por gráfico individual ----------
+    async function exportarChartPdf(chartDataJson, sugestao) {
+        try {
+            const chartData = JSON.parse(chartDataJson);
+            const r = await fetch('/api/dashboard/charts/export-pdf', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    chartData,
+                    titulo: chartData.title || 'Gráfico',
+                    suggested_insight: sugestao || null
+                })
+            });
+            if (!r.ok) {
+                const err = await r.json().catch(() => ({}));
+                alert(err.detail || 'Falha ao gerar PDF.');
+                return;
+            }
+            const blob = await r.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `mitra-med-${(chartData.title||'grafico').toLowerCase().replace(/\s+/g,'-')}.pdf`;
+            document.body.appendChild(a); a.click(); a.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        } catch (e) { console.error(e); alert('Erro ao baixar PDF.'); }
+    }
+
+    function exportarChartFixadoPdf(id) {
+        window.location.href = `/api/dashboard/charts/${id}/export-pdf`;
     }
 
     async function removerGraficoFixado(id) {
