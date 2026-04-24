@@ -3,11 +3,10 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import JSONResponse, Response
 
-from app.api.deps import require_user
 from app.core.logging_setup import get_logger
 from app.schemas.chat import ExportChartIn, FixarChartIn
 from app.services import dashboard_charts
@@ -17,7 +16,6 @@ logger = get_logger(__name__)
 router = APIRouter(
     prefix="/api/dashboard",
     tags=["dashboard"],
-    dependencies=[Depends(require_user)],
 )
 
 

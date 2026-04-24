@@ -19,24 +19,35 @@ Dataserver/
     main.py                     # FastAPI factory + lifespan
     core/
       config.py                 # Settings (env-driven, immutable)
+      cache.py                  # ttl_cache decorator
       logging_setup.py
     db/
       engine.py                 # SQLAlchemy engine
       schema.py                 # DDL idempotente (init_schema)
     services/
-      patients.py               # leitura de `pacientes` + métricas (LGPD-safe)
+      patients.py               # leitura de `pacientes` + métricas (LGPD-safe; schema cache 60s)
       conversations.py          # CRUD conversas/mensagens + plano_to_chart_data
       dashboard_charts.py       # CRUD gráficos fixados (limite 10)
-      ai_engine.py              # cliente Groq + planejar_grafico
+      ai_engine.py              # cliente Groq + planejar_grafico (PII mask + audit log)
       chart_render.py           # matplotlib base64 (compat)
-      pdf_report.py             # gerar_pdf_dashboard + gerar_pdf_chart
+      pdf_report.py             # gerar_pdf_dashboard + gerar_pdf_chart (rodam em threadpool)
     api/
       routes_chat.py            # POST /api/analisar
       routes_conversations.py   # /api/conversas (CRUD)
       routes_dashboard.py       # /api/dashboard/* (charts + PDFs)
     schemas/
-      chat.py                   # Pydantic models
-  templates/, static/
+      chat.py                   # Pydantic models (ChartDataIn validado)
+  templates/                    # index.html (logo: /static/img/logo.png)
+  static/
+    style.css
+    img/logo.png                # logo oficial PrimoDATA
+  _disabled/                    # NÃO importado pelo app — cofre p/ reativação
+    README.md
+    auth/                       # sistema JWT desativado em 24/04/2026
+      api/{routes_auth.py, deps.py}
+      services/auth.py
+      core/security.py
+      templates/login.html
 ```
 
 ## Endpoints

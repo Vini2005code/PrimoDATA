@@ -1,10 +1,9 @@
 """Rotas de análise/chat com a IA."""
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
-from app.api.deps import require_user
 from app.core.logging_setup import get_logger
 from app.schemas.chat import RequisicaoChat
 from app.services import ai_engine, conversations, patients
@@ -15,7 +14,7 @@ router = APIRouter(tags=["chat"])
 
 
 @router.post("/api/analisar")
-async def api_analisar(req: RequisicaoChat, user: dict = Depends(require_user)):
+async def api_analisar(req: RequisicaoChat):
     """Recebe pergunta → consulta banco → IA decide (texto ou texto+gráfico)
     → persiste no histórico → devolve resposta padronizada.
     """

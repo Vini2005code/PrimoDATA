@@ -4,23 +4,20 @@ from __future__ import annotations
 import os
 from contextlib import asynccontextmanager
 
-from fastapi import Depends, FastAPI, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi import FastAPI, Request
+from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from app.api import (
-    routes_auth,
     routes_chat,
     routes_conversations,
     routes_dashboard,
 )
-from app.api.deps import current_user
 from app.core.config import settings
 from app.core.logging_setup import get_logger, setup_logging
 from app.db.schema import init_schema
 from app.services import patients
-from app.services.auth import bootstrap_admin
 
 setup_logging()
 logger = get_logger(__name__)
@@ -39,11 +36,7 @@ async def lifespan(app: FastAPI):  # noqa: ARG001
         init_schema()
     except Exception as e:
         logger.error(f"Schema NÃO inicializado: {e}")
-    if settings.auth_enabled:
-        try:
-            bootstrap_admin()
-        except Exception as e:
-            logger.error(f"Bootstrap de admin falhou: {e}")
+    # Auth desativada (ver Dataserver/_disabled/auth/). bootstrap_admin não roda.
     yield
 
 
@@ -58,9 +51,7 @@ def create_app() -> FastAPI:
     templates = Jinja2Templates(directory=_TEMPLATES_DIR)
 
     @app.get("/", response_class=HTMLResponse)
-    async def home(request: Request, user: dict | None = Depends(current_user)):
-        if settings.auth_enabled and not user:
-            return RedirectResponse(url="/login", status_code=302)
+    async def home(request: Request):
         try:
             metricas = patients.dashboard_metrics()
         except Exception as e:
@@ -70,22 +61,15 @@ def create_app() -> FastAPI:
                 "ativos": 0, "diagnosticos_unicos": 0,
             }
         ctx = dict(metricas)
-        ctx["current_user"] = (user or {}).get("username", "")
+        ctx["current_user"] = ""  # auth desativada
         return templates.TemplateResponse(
             request=request, name="index.html", context=ctx
         )
-
-    @app.get("/login", response_class=HTMLResponse)
-    async def login_page(request: Request, user: dict | None = Depends(current_user)):
-        if user:
-            return RedirectResponse(url="/", status_code=302)
-        return templates.TemplateResponse(request=request, name="login.html", context={})
 
     @app.get("/healthz")
     async def healthz():
         return {"status": "ok", "version": settings.app_version}
 
-    app.include_router(routes_auth.router)
     app.include_router(routes_chat.router)
     app.include_router(routes_conversations.router)
     app.include_router(routes_dashboard.router)
