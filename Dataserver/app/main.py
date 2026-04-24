@@ -13,6 +13,7 @@ from app.api import (
     routes_chat,
     routes_conversations,
     routes_dashboard,
+    routes_reports,
 )
 from app.core.config import settings
 from app.core.logging_setup import get_logger, setup_logging
@@ -73,6 +74,7 @@ def create_app() -> FastAPI:
     app.include_router(routes_chat.router)
     app.include_router(routes_conversations.router)
     app.include_router(routes_dashboard.router)
+    app.include_router(routes_reports.router)
 
     return app
 

@@ -59,6 +59,28 @@ Dataserver/
 - `GET  /api/dashboard/export-pdf` — PDF consolidado
 - `GET  /api/dashboard/charts/{id}/export-pdf` — PDF de gráfico fixado
 - `POST /api/dashboard/charts/export-pdf` — PDF de gráfico individual (chat)
+- `GET  /api/reports/meta` — campos seguros, group_by, formatos, mês corrente
+- `POST /api/reports/preview` — relatório do mês atual em JSON
+- `POST /api/reports/export?format=csv|json|xml|pdf` — download do relatório
+
+## Aba "Relatórios Primordial" (adicionada em 24/04/2026)
+- Escopo SEMPRE = mês corrente (`date_trunc('month', CURRENT_DATE)`).
+- 3 modos de dado: `bruto` (linhas), `agregado` (GROUP BY count), `metrica` (KPIs).
+- Filtros opcionais: `status`, `convenio` (IN parametrizado).
+- Hard-cap servidor: 1000 linhas (Pydantic ge=1, le=1000).
+- LGPD em camada dupla: whitelist de campos (`sanitize.allowed_fields()`) + rejeição
+  explícita 422 se algum campo da blacklist for solicitado, com log no canal
+  `primordial.lgpd.audit`. Blacklist vem de `settings.lgpd_blacklist` (CPF, RG,
+  nome, telefone, email, endereço, prontuário, etc — todos bloqueados).
+- 4 exporters: CSV (BOM UTF-8), JSON (ensure_ascii=False), XML (ElementTree),
+  PDF (reusa estilos de `pdf_report.py`, roda em `run_in_threadpool`).
+- Auth ainda DESATIVADA (igual ao restante). Para reativar: adicionar
+  `dependencies=[Depends(require_user)]` no `APIRouter` de `routes_reports.py`.
+- Arquivos novos:
+  - `app/schemas/reports.py`
+  - `app/services/reports/{__init__,sanitize,query}.py`
+  - `app/services/exporters/{__init__,csv,json,xml,pdf}_exporter.py`
+  - `app/api/routes_reports.py`
 
 ## Running
 Workflow `Start application` (sem alteração após o refactor):
