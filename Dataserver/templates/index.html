@@ -292,7 +292,7 @@
 
     // ============== renderModernChart ==============
     // Paleta HSL alinhada à do projeto Lovable (primary, accent, success...).
-    const MITRA_PALETTE = [
+    const PRIMORDIAL_PALETTE = [
         'hsl(210, 78%, 46%)',  // primary
         'hsl(168, 76%, 42%)',  // accent
         'hsl(38, 92%, 50%)',   // warning
@@ -317,7 +317,7 @@
         const tipo = chartData.type === 'donut' ? 'doughnut' : (chartData.type || 'bar');
         const labels = chartData.labels || [];
         const values = chartData.values || [];
-        const cores = labels.map((_, i) => MITRA_PALETTE[i % MITRA_PALETTE.length]);
+        const cores = labels.map((_, i) => PRIMORDIAL_PALETTE[i % PRIMORDIAL_PALETTE.length]);
 
         const isCircular = tipo === 'doughnut' || tipo === 'pie';
         const isLine = tipo === 'line';
@@ -553,7 +553,7 @@
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `mitra-med-${(chartData.title||'grafico').toLowerCase().replace(/\s+/g,'-')}.pdf`;
+            a.download = `primordial-data-${(chartData.title||'grafico').toLowerCase().replace(/\s+/g,'-')}.pdf`;
             document.body.appendChild(a); a.click(); a.remove();
             setTimeout(() => URL.revokeObjectURL(url), 1000);
         } catch (e) { console.error(e); alert('Erro ao baixar PDF.'); }

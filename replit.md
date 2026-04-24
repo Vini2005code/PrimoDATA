@@ -1,6 +1,6 @@
-# PrimoDATA / Mitra Med
+# Primordial Data
 
-FastAPI + PostgreSQL clinical analytics dashboard with Groq-powered AI ("Mitra Med").
+FastAPI + PostgreSQL clinical analytics dashboard with Groq-powered AI ("Primordial Data").
 
 ## Stack
 - Python 3.12, FastAPI, Uvicorn

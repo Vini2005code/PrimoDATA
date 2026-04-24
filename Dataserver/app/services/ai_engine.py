@@ -13,7 +13,7 @@ from app.core.config import settings
 from app.core.logging_setup import get_logger
 
 logger = get_logger(__name__)
-audit = get_logger("mitra.lgpd.audit")
+audit = get_logger("primordial.lgpd.audit")
 
 # Regex de PII brasileiros — aplicadas na pergunta do médico antes de
 # enviar à Groq, para reduzir vazamento acidental de dados pessoais.
@@ -49,7 +49,7 @@ def _get_client() -> Groq:
     return _client
 
 
-_PROMPT_TEMPLATE = """SISTEMA DE INTELIGÊNCIA CLÍNICA - MITRA MED
+_PROMPT_TEMPLATE = """SISTEMA DE INTELIGÊNCIA CLÍNICA - PRIMORDIAL DATA
 
 [CONTEXTO DOS DADOS]
 {contexto}
@@ -120,7 +120,7 @@ def planejar_grafico(contexto_clinico: str, pergunta_medico: str) -> dict:
         return {
             "analise": data.get("analise", "Análise processada."),
             "tipo_grafico": data.get("tipo_grafico"),
-            "titulo": data.get("titulo", "Análise Mitra Med"),
+            "titulo": data.get("titulo", "Análise Primordial Data"),
             "eixo_x": data.get("eixo_x", []),
             "valores": data.get("valores", []),
             "sugestao": data.get("sugestao", ""),

@@ -44,7 +44,7 @@ PALETTE_HEX = [
 PRIMARY_HEX = PALETTE_HEX[0]
 
 LGPD_NOTICE = (
-    "Documento gerado automaticamente pelo Mitra Med · Inteligência Clínica. "
+    "Documento gerado automaticamente pelo Primordial Data · Inteligência Clínica. "
     "Todos os dados apresentados são agregados e anonimizados em conformidade "
     "com a LGPD (Lei nº 13.709/2018). Este relatório é de uso restrito da "
     "equipe clínica responsável."
@@ -132,7 +132,7 @@ def _draw_header_footer(canvas, doc):
     canvas.rect(0, height - 1.3 * cm, width, 1.3 * cm, fill=1, stroke=0)
     canvas.setFillColor(colors.white)
     canvas.setFont("Helvetica-Bold", 13)
-    canvas.drawString(2 * cm, height - 0.85 * cm, "Mitra Med")
+    canvas.drawString(2 * cm, height - 0.85 * cm, "Primordial Data")
     canvas.setFont("Helvetica", 9)
     canvas.drawString(2 * cm, height - 1.15 * cm, "Inteligência Clínica")
     canvas.setFont("Helvetica", 9)
@@ -223,7 +223,7 @@ def gerar_pdf_dashboard(
 ) -> bytes:
     """PDF consolidado de TODOS os gráficos do dashboard."""
     buf = io.BytesIO()
-    doc = _new_doc(buf, "Mitra Med - Relatório")
+    doc = _new_doc(buf, "Primordial Data - Relatório")
     st = _styles()
 
     story: list = [
@@ -260,7 +260,7 @@ def gerar_pdf_chart(
 ) -> bytes:
     """PDF de UM único gráfico — reaproveita _chart_block."""
     buf = io.BytesIO()
-    doc = _new_doc(buf, "Mitra Med - Gráfico")
+    doc = _new_doc(buf, "Primordial Data - Gráfico")
     st = _styles()
 
     titulo_render = (titulo or chart_data.get("title") or "Gráfico").strip()

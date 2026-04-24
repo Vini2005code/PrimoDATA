@@ -77,7 +77,7 @@ async def export_dashboard_pdf():
                 "Os gráficos a seguir refletem o estado atual da base de pacientes."
             ),
         )
-        filename = f"mitra-med-dashboard-{_ts()}.pdf"
+        filename = f"primordial-data-dashboard-{_ts()}.pdf"
         return Response(
             content=pdf_bytes,
             media_type="application/pdf",
@@ -100,7 +100,7 @@ async def export_pinned_chart_pdf(chart_id: int):
             chart["chartData"] or {},
             chart.get("titulo"),
         )
-        filename = f"mitra-med-{_slug(chart.get('titulo') or '')}-{_ts()}.pdf"
+        filename = f"primordial-data-{_slug(chart.get('titulo') or '')}-{_ts()}.pdf"
         return Response(
             content=pdf_bytes,
             media_type="application/pdf",
@@ -127,7 +127,7 @@ async def export_chart_inline_pdf(req: ExportChartIn):
             req.suggested_insight,
             req.analise,
         )
-        filename = f"mitra-med-{_slug(titulo)}-{_ts()}.pdf"
+        filename = f"primordial-data-{_slug(titulo)}-{_ts()}.pdf"
         return Response(
             content=pdf_bytes,
             media_type="application/pdf",

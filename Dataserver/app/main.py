@@ -1,4 +1,4 @@
-"""Bootstrap da aplicação FastAPI Mitra Med."""
+"""Bootstrap da aplicação FastAPI Primordial Data."""
 from __future__ import annotations
 
 import os

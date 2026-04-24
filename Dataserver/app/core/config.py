@@ -59,7 +59,7 @@ class Settings:
     admin_username: str | None = field(default_factory=lambda: os.getenv("ADMIN_USERNAME"))
     admin_password: str | None = field(default_factory=lambda: os.getenv("ADMIN_PASSWORD"))
 
-    app_title: str = "Mitra Med — Inteligência Clínica"
+    app_title: str = "Primordial Data — Inteligência Clínica"
     app_version: str = "2.2"
 
 
