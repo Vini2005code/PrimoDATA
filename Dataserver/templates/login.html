@@ -9,7 +9,8 @@
   body { background: linear-gradient(160deg, hsl(210, 78%, 96%), hsl(168, 76%, 96%)); min-height: 100vh; display:flex; align-items:center; justify-content:center; font-family: Inter, system-ui, sans-serif; margin:0; padding:1rem; }
   .login-card { width: 100%; max-width: 380px; background:#fff; border:1px solid hsl(214,32%,91%); border-radius: .9rem; padding: 2rem 1.75rem; box-shadow: 0 12px 32px hsla(210,78%,30%,.08); }
   .login-brand { display:flex; align-items:center; gap:.75rem; margin-bottom:1.25rem; }
-  .login-brand-icon { width:42px; height:42px; border-radius:.6rem; background:linear-gradient(135deg, hsl(210,78%,46%), hsl(168,76%,42%)); color:#fff; display:flex; align-items:center; justify-content:center; font-size:1.1rem; }
+  .login-brand-icon { width:48px; height:48px; border-radius:.7rem; background:linear-gradient(135deg, hsl(210,78%,46%), hsl(168,76%,42%)); display:flex; align-items:center; justify-content:center; padding:6px; box-shadow:0 4px 12px hsla(210,78%,30%,.18); }
+  .login-brand-icon img { width:100%; height:100%; object-fit:contain; display:block; }
   .login-title { font-size:1.05rem; font-weight:700; color:hsl(222,47%,11%); }
   .login-subtitle { font-size:.78rem; color:hsl(215,16%,45%); }
   .field { margin-bottom: .9rem; }
@@ -26,7 +27,7 @@
 <body>
   <form class="login-card" id="loginForm" autocomplete="on">
     <div class="login-brand">
-      <div class="login-brand-icon">M</div>
+      <div class="login-brand-icon"><img src="/static/img/logo.png" alt="PrimoDATA"></div>
       <div>
         <div class="login-title">Mitra Med</div>
         <div class="login-subtitle">Inteligência Clínica</div>

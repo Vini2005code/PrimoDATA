@@ -65,13 +65,15 @@ button { font-family: inherit; }
 
 .brand { display: flex; align-items: center; gap: .75rem; }
 .logo {
-    width: 36px; height: 36px;
+    width: 38px; height: 38px;
     border-radius: 10px;
     background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
-    color: white;
     display: flex; align-items: center; justify-content: center;
     box-shadow: 0 2px 8px hsla(210, 78%, 46%, 0.25);
+    padding: 5px;
+    overflow: hidden;
 }
+.logo img { width: 100%; height: 100%; object-fit: contain; display: block; }
 .brand-text strong { display: block; font-size: 0.95rem; letter-spacing: -0.01em; }
 .brand-text small { color: hsl(var(--muted-foreground)); font-size: 0.72rem; }
 
