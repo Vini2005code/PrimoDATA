@@ -10,7 +10,16 @@ load_dotenv()
 
 
 def _build_db_url() -> str:
-    """Monta a URL do Postgres preferindo DATABASE_URL (Replit/produção)."""
+    """Monta a URL do Postgres.
+
+    Ordem de preferência:
+      1. PRIMORDIAL_DATABASE_URL  → banco externo do cliente (PostgreSQL próprio)
+      2. DATABASE_URL             → banco gerenciado pelo Replit (fallback)
+      3. PG* / DB_*               → componentes individuais (último recurso)
+    """
+    primordial = os.getenv("PRIMORDIAL_DATABASE_URL")
+    if primordial:
+        return primordial
     direct = os.getenv("DATABASE_URL")
     if direct:
         return direct
