@@ -618,3 +618,55 @@ button { font-family: inherit; }
     .rel-filters { position: static; }
     .rel-checks { grid-template-columns: 1fr 1fr; }
 }
+
+/* ===== SIDEBAR — GRUPOS NAV (Gestão da Clínica / Inteligência Regional) ===== */
+.side-group-label {
+    padding: 14px 18px 6px;
+    font-size: .68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .09em;
+    color: hsl(var(--muted-foreground));
+}
+.side-group-label--top {
+    margin-top: 10px;
+    border-top: 1px solid hsl(var(--border));
+    padding-top: 14px;
+}
+
+/* ===== PORTAL SIASUS — placeholders ===== */
+.siasus-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 18px;
+    margin-top: 20px;
+}
+.siasus-placeholder {
+    background: hsl(var(--card));
+    border: 1px dashed hsl(var(--border));
+    border-radius: var(--radius);
+    padding: 36px 20px;
+    min-height: 220px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 10px;
+}
+.siasus-placeholder i {
+    font-size: 2.1rem;
+    color: hsl(var(--muted-foreground));
+    opacity: .55;
+}
+.siasus-placeholder h3 {
+    font-size: 1rem;
+    margin: 0;
+    color: hsl(var(--foreground));
+    font-weight: 600;
+}
+.siasus-placeholder p {
+    font-size: .85rem;
+    margin: 0;
+    color: hsl(var(--muted-foreground));
+}

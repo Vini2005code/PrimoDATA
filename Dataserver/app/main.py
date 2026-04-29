@@ -14,6 +14,7 @@ from app.api import (
     routes_conversations,
     routes_dashboard,
     routes_reports,
+    routes_siasus,
 )
 from app.core.config import settings
 from app.core.logging_setup import get_logger, setup_logging
@@ -71,10 +72,14 @@ def create_app() -> FastAPI:
     async def healthz():
         return {"status": "ok", "version": settings.app_version}
 
+    # Domínio CLÍNICA
     app.include_router(routes_chat.router)
     app.include_router(routes_conversations.router)
     app.include_router(routes_dashboard.router)
     app.include_router(routes_reports.router)
+
+    # Domínio SIASUS (Inteligência Regional) — isolado da clínica
+    app.include_router(routes_siasus.router)
 
     return app
 

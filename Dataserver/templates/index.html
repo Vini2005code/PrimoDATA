@@ -37,14 +37,20 @@
     <!-- ========== SIDEBAR ========== -->
     <aside class="sidebar" id="sidebar">
         <nav class="side-nav">
+            <div class="side-group-label">Gestão da Clínica</div>
             <a href="#" class="side-link active" data-view="chat">
-                <i class="far fa-comment"></i> <span>Chat</span>
+                <i class="far fa-comment"></i> <span>Chat Clínico</span>
             </a>
             <a href="#" class="side-link" data-view="dashboard">
-                <i class="fas fa-chart-column"></i> <span>Dashboard</span>
+                <i class="fas fa-chart-column"></i> <span>Dashboard de Pacientes</span>
             </a>
             <a href="#" class="side-link" data-view="relatorios">
                 <i class="fas fa-file-lines"></i> <span>Relatórios</span>
+            </a>
+
+            <div class="side-group-label side-group-label--top">Inteligência Regional</div>
+            <a href="#" class="side-link" data-view="siasus">
+                <i class="fas fa-hospital"></i> <span>Portal SIASUS</span>
             </a>
         </nav>
 
@@ -225,6 +231,40 @@
                     </div>
                 </section>
             </div>
+        </section>
+
+        <!-- ===== PORTAL SIASUS VIEW (Inteligência Regional) ===== -->
+        <section class="view view-siasus" id="view-siasus" hidden>
+            <div class="page-header">
+                <h1>Portal SIASUS</h1>
+                <p class="muted">
+                    Inteligência regional baseada em dados públicos do SUS.
+                    Domínio independente da Gestão da Clínica — sem cruzamento
+                    de dados de pacientes.
+                </p>
+            </div>
+
+            <div class="siasus-grid">
+                <div class="siasus-placeholder">
+                    <i class="fas fa-stethoscope"></i>
+                    <h3>Top CIDs da Região</h3>
+                    <p>Aguardando ingestão de dados.</p>
+                </div>
+                <div class="siasus-placeholder">
+                    <i class="fas fa-chart-line"></i>
+                    <h3>Tendências Mensais</h3>
+                    <p>Aguardando ingestão de dados.</p>
+                </div>
+                <div class="siasus-placeholder">
+                    <i class="fas fa-sack-dollar"></i>
+                    <h3>Custos SUS</h3>
+                    <p>Aguardando ingestão de dados.</p>
+                </div>
+            </div>
+
+            <p class="muted" style="margin-top:24px; font-size:.85rem;">
+                Fonte: Engine Primordial Data — Base SIASUS 2026.
+            </p>
         </section>
 
     </main>

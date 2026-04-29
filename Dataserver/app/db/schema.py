@@ -49,6 +49,25 @@ CREATE TABLE IF NOT EXISTS dashboard_charts (
     posicao INTEGER NOT NULL DEFAULT 0,
     criada_em TIMESTAMP NOT NULL DEFAULT NOW()
 );
+
+-- Domínio SIASUS (Inteligência Regional). Tabela INDEPENDENTE da tabela
+-- `pacientes` — não há foreign keys cruzando os dois domínios. As consultas
+-- SIASUS ficam isoladas em `app/api/routes_siasus.py` (prefixo /siasus).
+CREATE TABLE IF NOT EXISTS atendimentos_siasus (
+    id                  SERIAL PRIMARY KEY,
+    cid_codigo          VARCHAR(10),
+    idade               INTEGER,
+    sexo                VARCHAR(10),
+    valor_procedimento  NUMERIC(10, 2),
+    municipio           VARCHAR(120),
+    data_atendimento    DATE
+);
+CREATE INDEX IF NOT EXISTS idx_siasus_data
+    ON atendimentos_siasus (data_atendimento);
+CREATE INDEX IF NOT EXISTS idx_siasus_municipio
+    ON atendimentos_siasus (municipio);
+CREATE INDEX IF NOT EXISTS idx_siasus_cid
+    ON atendimentos_siasus (cid_codigo);
 """
 
 
