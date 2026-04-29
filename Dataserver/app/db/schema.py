@@ -1,6 +1,17 @@
 """Schema (DDL) das tabelas usadas pela aplicação.
 
 Idempotente — pode ser executado em todo startup.
+
+NOTA: A tabela `usuarios` foi removida deste DDL porque o módulo de
+autenticação está desativado (ver `Dataserver/_disabled/auth/`). Quando o
+auth for reativado, o DDL correspondente deve ser restaurado aqui:
+
+    CREATE TABLE IF NOT EXISTS usuarios (
+        id SERIAL PRIMARY KEY,
+        username VARCHAR(80) NOT NULL UNIQUE,
+        password_hash VARCHAR(255) NOT NULL,
+        criada_em TIMESTAMP NOT NULL DEFAULT NOW()
+    );
 """
 from sqlalchemy import text
 
@@ -30,16 +41,6 @@ CREATE TABLE IF NOT EXISTS mensagens (
 
 CREATE INDEX IF NOT EXISTS idx_mensagens_conversa
     ON mensagens (conversa_id, criada_em);
-
--- Tabela `usuarios` desativada: será reativada junto com o módulo de
--- autenticação que está em `Dataserver/_disabled/auth/`. Enquanto o auth
--- estiver desativado, evitamos criar tabela sem uso no startup.
--- CREATE TABLE IF NOT EXISTS usuarios (
---     id SERIAL PRIMARY KEY,
---     username VARCHAR(80) NOT NULL UNIQUE,
---     password_hash VARCHAR(255) NOT NULL,
---     criado_em TIMESTAMP NOT NULL DEFAULT NOW()
--- );
 
 CREATE TABLE IF NOT EXISTS dashboard_charts (
     id SERIAL PRIMARY KEY,
