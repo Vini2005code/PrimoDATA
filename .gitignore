@@ -15,6 +15,14 @@ build/
 dist/
 *.egg-info/
 
+# --- JUPYTER / NOTEBOOKS ---
+.ipynb_checkpoints/
+.virtual_documents/
+notebooks/
+
+# --- ASSETS LOCAIS (não versionar) ---
+attached_assets/
+
 # --- JAVA / SPRING BOOT ---
 target/
 *.class

@@ -33,6 +33,11 @@ def get_clinical_context() -> str:
             if not safe_cols:
                 return "Aviso: nenhuma coluna segura para LGPD foi encontrada."
 
+            # SEGURANÇA: a interpolação de `safe_cols` na f-string abaixo é segura
+            # porque os nomes de coluna NUNCA vêm de input do usuário — vêm
+            # exclusivamente do `sqlalchemy.inspect()` (ver `_all_columns`) e
+            # passam pela `_safe_columns()`, que aplica a allowlist da LGPD
+            # (`settings.lgpd_blacklist`). Valores são parametrizados.
             query = text(
                 f"SELECT {', '.join(safe_cols)} FROM pacientes LIMIT :limit"
             )

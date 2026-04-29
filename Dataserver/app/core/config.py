@@ -31,13 +31,6 @@ def _build_db_url() -> str:
     return f"postgresql://{user}:{pwd}@{host}:{port}/{name}"
 
 
-def _bool_env(name: str, default: bool) -> bool:
-    v = os.getenv(name)
-    if v is None:
-        return default
-    return v.strip().lower() in ("1", "true", "yes", "on")
-
-
 @dataclass(frozen=True)
 class Settings:
     database_url: str = field(default_factory=_build_db_url)
@@ -57,16 +50,6 @@ class Settings:
         "responsavel", "responsável", "observacoes", "observações",
         "anamnese", "prontuario", "prontuário",
     )
-
-    # Autenticação
-    auth_enabled: bool = field(default_factory=lambda: _bool_env("AUTH_ENABLED", True))
-    jwt_secret: str | None = field(default_factory=lambda: os.getenv("JWT_SECRET"))
-    jwt_expire_minutes: int = field(
-        default_factory=lambda: int(os.getenv("JWT_EXPIRE_MINUTES", "720"))
-    )
-    cookie_secure: bool = field(default_factory=lambda: _bool_env("COOKIE_SECURE", False))
-    admin_username: str | None = field(default_factory=lambda: os.getenv("ADMIN_USERNAME"))
-    admin_password: str | None = field(default_factory=lambda: os.getenv("ADMIN_PASSWORD"))
 
     app_title: str = "Primordial Data — Inteligência Clínica"
     app_version: str = "2.2"

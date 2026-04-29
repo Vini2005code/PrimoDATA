@@ -31,12 +31,15 @@ CREATE TABLE IF NOT EXISTS mensagens (
 CREATE INDEX IF NOT EXISTS idx_mensagens_conversa
     ON mensagens (conversa_id, criada_em);
 
-CREATE TABLE IF NOT EXISTS usuarios (
-    id SERIAL PRIMARY KEY,
-    username VARCHAR(80) NOT NULL UNIQUE,
-    password_hash VARCHAR(255) NOT NULL,
-    criado_em TIMESTAMP NOT NULL DEFAULT NOW()
-);
+-- Tabela `usuarios` desativada: será reativada junto com o módulo de
+-- autenticação que está em `Dataserver/_disabled/auth/`. Enquanto o auth
+-- estiver desativado, evitamos criar tabela sem uso no startup.
+-- CREATE TABLE IF NOT EXISTS usuarios (
+--     id SERIAL PRIMARY KEY,
+--     username VARCHAR(80) NOT NULL UNIQUE,
+--     password_hash VARCHAR(255) NOT NULL,
+--     criado_em TIMESTAMP NOT NULL DEFAULT NOW()
+-- );
 
 CREATE TABLE IF NOT EXISTS dashboard_charts (
     id SERIAL PRIMARY KEY,
