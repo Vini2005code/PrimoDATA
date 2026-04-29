@@ -1,0 +1,20 @@
+Prompt: "A partir de agora, o projeto chama-se exclusivamente Primordial Data. Remova todas as menções ao nome antigo na interface, títulos e metadados. Preciso criar uma estrutura de banco de dados (PostgreSQL) para receber dados massivos do SIASUS (DataSUS). Crie uma nova tabela chamada atendimentos_siasus com as colunas: id (serial primary key), cid_codigo (varchar), idade (int), sexo (varchar), valor (numeric), data_atendimento (date), municipio_nome (varchar) e origem (varchar, default 'DATASUS'). Adicione um índice (INDEX) nas colunas cid_codigo e data_atendimento para suportar consultas pesadas de Big Data."
+
+Parte 2: Criação da Aba Exclusiva DataSUS
+Objetivo: Criar um ambiente visual totalmente novo, focado em inteligência regional.
+
+Prompt: "No Dashboard principal, crie uma nova aba lateral ou menu chamada 'Inteligência Regional (DataSUS)'. Esta aba deve ser independente da aba de pacientes da clínica. Dentro dela, desenvolva uma visão de Big Data contendo:
+
+Um seletor de filtros por 'Município' e 'Mês'.
+
+Três cards de resumo: 'Total de Atendimentos Processados', 'Custo Total SUS na Região' e 'Idade Média do Público'.
+
+Um gráfico de barras (Chart.js) mostrando os 10 CIDs (doenças) mais frequentes na base do DataSUS.
+
+Um gráfico de linhas mostrando a evolução dos atendimentos ao longo dos meses de 2026.
+Use cores sóbrias (azul petróleo e grafite) para diferenciar do restante do sistema."
+
+Parte 3: Relatórios de Benchmarking (O Diferencial)
+Objetivo: Unir os dois mundos no PDF que você vai entregar ao seu sogro.
+
+Prompt: "Atualize o módulo de exportação de PDF. Agora, o relatório deve ter uma seção de 'Análise Comparativa'. O sistema deve buscar a média de atendimentos da clínica (tabela de pacientes) e comparar com os dados globais da tabela atendimentos_siasus. Exemplo: 'A incidência da Doença X na clínica é de 10%, enquanto na região (DataSUS) é de 15%'. Inclua o logotipo da Primordial Data e uma nota de rodapé afirmando: 'Dados processados via Engine Primordial Data - Base SIASUS 2026'."
