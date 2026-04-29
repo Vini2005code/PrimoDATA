@@ -1,16 +1,19 @@
-"""Engine SQLAlchemy compartilhada com fallback automático.
+"""Engine SQLAlchemy compartilhada — modo ESTRITO.
 
-Estratégia:
-  1. Tenta o banco primário (`PRIMORDIAL_DATABASE_URL` — PG externo do cliente).
-  2. Se a conexão falhar (timeout / refused / DNS), usa o fallback
-     (`DATABASE_URL` — PG gerenciado pelo Replit) e registra aviso.
-  3. Se ambos falharem, cria o engine apontando para o primário mesmo assim
-     (assim os erros aparecem nos endpoints sem derrubar o startup do app).
-
-Isso permite trabalhar localmente sem o tunnel ngrok ativo, sem precisar
-mexer em variáveis de ambiente toda hora.
+Regras:
+  1. Se `PRIMORDIAL_DATABASE_URL` estiver definida, ela é AUTORITATIVA.
+     Não há fallback automático para `DATABASE_URL` — se a conexão com o
+     banco primário falhar, o erro é registrado de forma clara e os
+     endpoints retornam erros reais (em vez de "fingir" que estão
+     funcionando com os dados de outro banco).
+  2. Se `PRIMORDIAL_DATABASE_URL` NÃO estiver definida, usa
+     `DATABASE_URL` (caminho legítimo de desenvolvimento puro no Replit).
+  3. O engine sempre é criado, mesmo que a conexão falhe no startup,
+     para que o servidor suba e os erros sejam visíveis nos endpoints.
 """
 from __future__ import annotations
+
+from urllib.parse import urlparse
 
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
@@ -20,27 +23,42 @@ from app.core.logging_setup import get_logger
 
 logger = get_logger(__name__)
 
-_CONNECT_TIMEOUT_SECONDS = 3
+_CONNECT_TIMEOUT_SECONDS = 5
 
 
-def _try_create(url: str, label: str) -> Engine | None:
-    """Cria o engine e valida com `SELECT 1`. Retorna None se a conexão falhar."""
+def _mask_url(url: str) -> str:
+    """Esconde a senha em uma URL de conexão para log seguro."""
     try:
-        eng = create_engine(
-            url,
-            connect_args={
-                "client_encoding": "utf8",
-                "connect_timeout": _CONNECT_TIMEOUT_SECONDS,
-            },
-            pool_pre_ping=True,
-        )
+        p = urlparse(url)
+        host = p.hostname or "?"
+        port = p.port or "?"
+        db = (p.path or "/").lstrip("/") or "?"
+        user = p.username or "?"
+        return f"{user}:***@{host}:{port}/{db}"
+    except Exception:
+        return "<url-mascarada>"
+
+
+def _create(url: str) -> Engine:
+    return create_engine(
+        url,
+        connect_args={
+            "client_encoding": "utf8",
+            "connect_timeout": _CONNECT_TIMEOUT_SECONDS,
+        },
+        pool_pre_ping=True,
+    )
+
+
+def _ping(eng: Engine) -> bool:
+    """Valida a conexão com `SELECT 1`."""
+    try:
         with eng.connect() as conn:
             conn.execute(text("SELECT 1"))
-        logger.info(f"Banco de dados conectado: fonte={label}")
-        return eng
+        return True
     except Exception as e:
-        logger.warning(f"Falha ao conectar no banco ({label}): {e}")
-        return None
+        logger.error(f"Falha no ping do banco: {e}")
+        return False
 
 
 def _build_engine() -> Engine:
@@ -48,32 +66,42 @@ def _build_engine() -> Engine:
     fallback = settings.fallback_database_url
 
     if primary:
-        eng = _try_create(primary, "primário (PRIMORDIAL_DATABASE_URL)")
-        if eng is not None:
-            return eng
-        if fallback and fallback != primary:
-            logger.warning(
-                "Banco primário indisponível. Usando fallback "
-                "(DATABASE_URL do Replit). Quando o tunnel/PG externo "
-                "estiver de pé, reinicie o app para voltar ao primário."
+        masked = _mask_url(primary)
+        logger.info(
+            f"Banco configurado (PRIMORDIAL_DATABASE_URL — modo estrito): {masked}"
+        )
+        eng = _create(primary)
+        if _ping(eng):
+            logger.info("✓ Conexão OK com o banco primário.")
+        else:
+            logger.error(
+                "================================================================\n"
+                f"  FALHA AO CONECTAR no banco primário: {masked}\n"
+                "  O servidor vai subir, mas TODAS as consultas a banco vão\n"
+                "  falhar até a conexão voltar. NÃO há fallback automático\n"
+                "  para DATABASE_URL — verifique se o PostgreSQL externo está\n"
+                "  acessível e se o tunnel ngrok está ativo.\n"
+                "================================================================"
             )
-            eng = _try_create(fallback, "fallback (DATABASE_URL)")
-            if eng is not None:
-                return eng
+        return eng
 
-    elif fallback:
-        eng = _try_create(fallback, "fallback (DATABASE_URL)")
-        if eng is not None:
-            return eng
+    if fallback:
+        masked = _mask_url(fallback)
+        logger.info(
+            f"Banco configurado (DATABASE_URL — PRIMORDIAL não definida): {masked}"
+        )
+        eng = _create(fallback)
+        if _ping(eng):
+            logger.info("✓ Conexão OK com o banco de desenvolvimento.")
+        else:
+            logger.error(f"FALHA AO CONECTAR no banco de desenvolvimento: {masked}")
+        return eng
 
-    # Último recurso: cria engine sem validar para não derrubar o startup;
-    # erros vão aparecer claramente nos endpoints que usam o banco.
-    logger.error("Nenhum banco de dados respondeu. Criando engine ocioso.")
-    return create_engine(
-        settings.database_url,
-        connect_args={"client_encoding": "utf8"},
-        pool_pre_ping=True,
+    logger.error(
+        "NENHUMA URL de banco configurada. "
+        "Defina PRIMORDIAL_DATABASE_URL (produção) ou DATABASE_URL (dev)."
     )
+    return _create("postgresql://postgres@localhost:5432/postgres")
 
 
 engine: Engine = _build_engine()
