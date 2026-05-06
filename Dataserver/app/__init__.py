@@ -1,4 +1,4 @@
-"""Mitra Med — pacote da aplicação FastAPI.
+"""Primordial Data — pacote da aplicação FastAPI.
 
 Estrutura:
     core/       configuração, logging

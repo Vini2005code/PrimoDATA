@@ -1,6 +1,17 @@
 """Schema (DDL) das tabelas usadas pela aplicação.
 
 Idempotente — pode ser executado em todo startup.
+
+NOTA: A tabela `usuarios` foi removida deste DDL porque o módulo de
+autenticação está desativado (ver `Dataserver/_disabled/auth/`). Quando o
+auth for reativado, o DDL correspondente deve ser restaurado aqui:
+
+    CREATE TABLE IF NOT EXISTS usuarios (
+        id SERIAL PRIMARY KEY,
+        username VARCHAR(80) NOT NULL UNIQUE,
+        password_hash VARCHAR(255) NOT NULL,
+        criada_em TIMESTAMP NOT NULL DEFAULT NOW()
+    );
 """
 from sqlalchemy import text
 
@@ -31,13 +42,6 @@ CREATE TABLE IF NOT EXISTS mensagens (
 CREATE INDEX IF NOT EXISTS idx_mensagens_conversa
     ON mensagens (conversa_id, criada_em);
 
-CREATE TABLE IF NOT EXISTS usuarios (
-    id SERIAL PRIMARY KEY,
-    username VARCHAR(80) NOT NULL UNIQUE,
-    password_hash VARCHAR(255) NOT NULL,
-    criado_em TIMESTAMP NOT NULL DEFAULT NOW()
-);
-
 CREATE TABLE IF NOT EXISTS dashboard_charts (
     id SERIAL PRIMARY KEY,
     titulo VARCHAR(200) NOT NULL DEFAULT 'Gráfico',
@@ -45,6 +49,25 @@ CREATE TABLE IF NOT EXISTS dashboard_charts (
     posicao INTEGER NOT NULL DEFAULT 0,
     criada_em TIMESTAMP NOT NULL DEFAULT NOW()
 );
+
+-- Domínio SIASUS (Inteligência Regional). Tabela INDEPENDENTE da tabela
+-- `pacientes` — não há foreign keys cruzando os dois domínios. As consultas
+-- SIASUS ficam isoladas em `app/api/routes_siasus.py` (prefixo /siasus).
+CREATE TABLE IF NOT EXISTS atendimentos_siasus (
+    id                  SERIAL PRIMARY KEY,
+    cid_codigo          VARCHAR(10),
+    idade               INTEGER,
+    sexo                VARCHAR(10),
+    valor_procedimento  NUMERIC(10, 2),
+    municipio           VARCHAR(120),
+    data_atendimento    DATE
+);
+CREATE INDEX IF NOT EXISTS idx_siasus_data
+    ON atendimentos_siasus (data_atendimento);
+CREATE INDEX IF NOT EXISTS idx_siasus_municipio
+    ON atendimentos_siasus (municipio);
+CREATE INDEX IF NOT EXISTS idx_siasus_cid
+    ON atendimentos_siasus (cid_codigo);
 """
 
 

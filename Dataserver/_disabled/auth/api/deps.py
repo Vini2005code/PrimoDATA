@@ -7,18 +7,18 @@ from app.core.config import settings
 from app.core.security import decode_token
 from app.services.auth import get_user
 
-COOKIE_NAME = "mitra_session"
+COOKIE_NAME = "primordial_session"
 
 
 def current_user(
-    mitra_session: str | None = Cookie(default=None, alias=COOKIE_NAME),
+    session_cookie: str | None = Cookie(default=None, alias=COOKIE_NAME),
 ) -> dict | None:
     """Retorna o usuário logado ou None. NÃO levanta exceção."""
     if not settings.auth_enabled:
         return {"id": 0, "username": "anonymous"}
-    if not mitra_session:
+    if not session_cookie:
         return None
-    payload = decode_token(mitra_session)
+    payload = decode_token(session_cookie)
     if not payload or not payload.get("sub"):
         return None
     user = get_user(payload["sub"])

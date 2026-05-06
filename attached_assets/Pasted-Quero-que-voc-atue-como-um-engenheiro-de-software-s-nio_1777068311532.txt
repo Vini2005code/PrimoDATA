@@ -1,0 +1,130 @@
+Quero que você atue como um engenheiro de software sênior com foco em sistemas de dados, performance e segurança.
+
+Analise meu projeto atual (especialmente a pasta Dataserver) e implemente uma NOVA FUNCIONALIDADE completa no sistema.
+
+OBJETIVO:
+Criar uma nova aba no sistema chamada:
+
+"Relatórios Primordial"
+
+Essa aba deve ser responsável por gerar e exportar relatórios de forma controlada, segura e performática.
+
+REGRAS GERAIS:
+- NÃO quebrar funcionalidades existentes
+- NÃO alterar comportamento atual do sistema
+- Implementar de forma incremental
+- Priorizar performance e segurança
+
+---
+
+## 🔹 FUNCIONALIDADES PRINCIPAIS
+
+### 1. NOVA ABA
+- Criar nova rota/página: "Relatórios Primordial"
+- Integrar com Dashboard e Chat
+- Interface simples e funcional
+
+---
+
+### 2. RELATÓRIO DO MÊS ATUAL (IMPORTANTE)
+- Trabalhar APENAS com dados do mês atual (por enquanto)
+- Não permitir seleção de outros períodos neste momento
+- Implementar lógica clara para filtrar dados do mês atual diretamente no banco (evitar processamento desnecessário)
+
+---
+
+### 3. CONTROLE TOTAL DE DADOS (CRÍTICO)
+
+O usuário deve poder controlar exatamente quais dados quer carregar:
+
+- Seleção de campos (ex: métricas, colunas específicas)
+- Seleção de tipo de dado (ex: gráficos, análises, registros brutos)
+- Limite de quantidade de dados retornados (ex: top 10, top 50)
+
+REGRAS:
+- Nunca carregar tudo automaticamente
+- Sempre exigir filtros antes de consultar
+- Implementar limites de segurança (ex: máximo de registros)
+
+---
+
+### 4. PERFORMANCE (PRIORIDADE ALTA)
+
+- Evitar queries pesadas sem filtro
+- Implementar limite de dados por requisição
+- Usar paginação ou limite fixo
+- Evitar travamento do sistema
+- Se necessário, usar execução assíncrona para exportações grandes
+- Garantir que geração de PDF não bloqueie o sistema
+
+---
+
+### 5. EXPORTAÇÃO MULTI-FORMATO
+
+Permitir exportação nos formatos:
+
+- CSV
+- JSON
+- XML
+- PDF
+
+REGRAS:
+- Cada formato deve ter função separada
+- Reutilizar a mesma base de dados (não duplicar lógica)
+- Exportar apenas os dados filtrados pelo usuário
+- PDF deve ter formato de relatório organizado
+
+---
+
+### 6. SEGURANÇA (OBRIGATÓRIO)
+
+- Proteger rota com autenticação (JWT ou sessão)
+- Validar todos os inputs (campos, limites, tipos)
+- Sanitizar dados antes de exportar
+- Garantir anonimização de dados sensíveis (LGPD)
+- Impedir acesso não autorizado
+
+---
+
+### 7. ESTRUTURA DO CÓDIGO
+
+Criar organização modular:
+
+- reports/ → lógica de relatórios
+- exporters/ → funções de exportação
+- routes/ ou api/ → endpoints
+
+Separar:
+- acesso a dados
+- regras de negócio
+- exportação
+
+---
+
+### 8. VALIDAÇÃO E ERROS
+
+- Retornar erros claros para:
+  - filtros inválidos
+  - excesso de dados solicitados
+  - falha na exportação
+- Nunca deixar o sistema quebrar
+
+---
+
+## 🔹 SAÍDA ESPERADA
+
+1. Estrutura da nova funcionalidade
+2. Implementação da aba "Relatórios Primordial"
+3. Sistema de filtro de dados controlado
+4. Funções de exportação (CSV, JSON, XML, PDF)
+5. Explicação das decisões técnicas
+6. Pontos de melhoria futura
+
+---
+
+## 🔴 IMPORTANTE
+
+Antes de implementar:
+- Explique o plano de execução
+- Aponte possíveis riscos
+- Confirme que não haverá regressão

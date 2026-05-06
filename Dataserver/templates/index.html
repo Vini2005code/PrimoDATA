@@ -37,11 +37,20 @@
     <!-- ========== SIDEBAR ========== -->
     <aside class="sidebar" id="sidebar">
         <nav class="side-nav">
+            <div class="side-group-label">Gestão da Clínica</div>
             <a href="#" class="side-link active" data-view="chat">
-                <i class="far fa-comment"></i> <span>Chat</span>
+                <i class="far fa-comment"></i> <span>Chat Clínico</span>
             </a>
             <a href="#" class="side-link" data-view="dashboard">
-                <i class="fas fa-chart-column"></i> <span>Dashboard</span>
+                <i class="fas fa-chart-column"></i> <span>Dashboard de Pacientes</span>
+            </a>
+            <a href="#" class="side-link" data-view="relatorios">
+                <i class="fas fa-file-lines"></i> <span>Relatórios</span>
+            </a>
+
+            <div class="side-group-label side-group-label--top">Inteligência Regional</div>
+            <a href="#" class="side-link" data-view="siasus">
+                <i class="fas fa-hospital"></i> <span>Portal SIASUS</span>
             </a>
         </nav>
 
@@ -139,6 +148,125 @@
             </div>
         </section>
 
+        <!-- ===== RELATÓRIOS VIEW ===== -->
+        <section class="view view-relatorios" id="view-relatorios" hidden>
+            <div class="page-header">
+                <h1>Relatórios Primordial</h1>
+                <p class="muted">
+                    Geração e exportação de relatórios do <b id="relPeriodo">mês atual</b>.
+                    Apenas o mês corrente é considerado e dados sensíveis (LGPD) são bloqueados automaticamente.
+                </p>
+            </div>
+
+            <div class="rel-grid">
+                <!-- Filtros -->
+                <aside class="rel-filters">
+                    <div class="rel-block">
+                        <label class="rel-label">Tipo de dado</label>
+                        <select id="relDataType" class="rel-input">
+                            <option value="bruto">Dados brutos (anonimizados)</option>
+                            <option value="agregado">Agregado (contagem por categoria)</option>
+                            <option value="metrica">Métricas do mês (KPIs)</option>
+                        </select>
+                    </div>
+
+                    <div class="rel-block" id="relFieldsBlock">
+                        <label class="rel-label">Campos a exportar</label>
+                        <div id="relFields" class="rel-checks"></div>
+                    </div>
+
+                    <div class="rel-block" id="relGroupBlock" hidden>
+                        <label class="rel-label">Agrupar por</label>
+                        <select id="relGroupBy" class="rel-input"></select>
+                    </div>
+
+                    <div class="rel-block">
+                        <label class="rel-label">Status (opcional)</label>
+                        <input type="text" id="relStatus" class="rel-input"
+                               placeholder="ex: ativo, alta (separados por vírgula)">
+                    </div>
+
+                    <div class="rel-block">
+                        <label class="rel-label">Convênio (opcional)</label>
+                        <input type="text" id="relConvenio" class="rel-input"
+                               placeholder="ex: SUS, Unimed (separados por vírgula)">
+                    </div>
+
+                    <div class="rel-block">
+                        <label class="rel-label">Limite de linhas (1–1000)</label>
+                        <input type="number" id="relLimit" class="rel-input"
+                               min="1" max="1000" value="50">
+                    </div>
+
+                    <div class="rel-actions">
+                        <button class="btn-primary" onclick="relPreview()">
+                            <i class="fas fa-eye"></i> Pré-visualizar
+                        </button>
+                    </div>
+
+                    <div class="rel-block">
+                        <label class="rel-label">Exportar</label>
+                        <div class="rel-export-row">
+                            <button class="btn-export-fmt" onclick="relExport('csv')">CSV</button>
+                            <button class="btn-export-fmt" onclick="relExport('json')">JSON</button>
+                            <button class="btn-export-fmt" onclick="relExport('xml')">XML</button>
+                            <button class="btn-export-fmt" onclick="relExport('pdf')">PDF</button>
+                        </div>
+                    </div>
+
+                    <p class="rel-lgpd-note">
+                        <i class="fas fa-shield-halved"></i>
+                        Campos pessoais identificáveis ficam bloqueados automaticamente pela LGPD.
+                    </p>
+                </aside>
+
+                <!-- Pré-visualização -->
+                <section class="rel-preview">
+                    <div class="rel-preview-head">
+                        <h2 id="relPreviewTitle">Pré-visualização</h2>
+                        <span id="relPreviewMeta" class="muted"></span>
+                    </div>
+                    <div id="relPreviewBody" class="rel-preview-body">
+                        <div class="rel-empty">Selecione filtros e clique em <b>Pré-visualizar</b>.</div>
+                    </div>
+                </section>
+            </div>
+        </section>
+
+        <!-- ===== PORTAL SIASUS VIEW (Inteligência Regional) ===== -->
+        <section class="view view-siasus" id="view-siasus" hidden>
+            <div class="page-header">
+                <h1>Portal SIASUS</h1>
+                <p class="muted">
+                    Inteligência regional baseada em dados públicos do SUS.
+                    Domínio independente da Gestão da Clínica — sem cruzamento
+                    de dados de pacientes.
+                </p>
+            </div>
+
+            <div class="siasus-grid">
+                <div class="siasus-placeholder">
+                    <i class="fas fa-stethoscope"></i>
+                    <h3>Top CIDs da Região</h3>
+                    <p>Aguardando ingestão de dados.</p>
+                </div>
+                <div class="siasus-placeholder">
+                    <i class="fas fa-chart-line"></i>
+                    <h3>Tendências Mensais</h3>
+                    <p>Aguardando ingestão de dados.</p>
+                </div>
+                <div class="siasus-placeholder">
+                    <i class="fas fa-sack-dollar"></i>
+                    <h3>Custos SUS</h3>
+                    <p>Aguardando ingestão de dados.</p>
+                </div>
+            </div>
+
+            <p class="muted" style="margin-top:24px; font-size:.85rem;">
+                Fonte: Engine Primordial Data — Base SIASUS 2026.
+            </p>
+        </section>
+
     </main>
 </div>
 
@@ -161,6 +289,7 @@
             if (target) target.hidden = false;
             document.getElementById('sideChatSection').style.display = (view === 'chat') ? '' : 'none';
             if (view === 'dashboard') carregarDashboardCharts();
+            if (view === 'relatorios') carregarRelatoriosMeta();
         });
     });
 
@@ -292,7 +421,7 @@
 
     // ============== renderModernChart ==============
     // Paleta HSL alinhada à do projeto Lovable (primary, accent, success...).
-    const MITRA_PALETTE = [
+    const PRIMORDIAL_PALETTE = [
         'hsl(210, 78%, 46%)',  // primary
         'hsl(168, 76%, 42%)',  // accent
         'hsl(38, 92%, 50%)',   // warning
@@ -317,7 +446,7 @@
         const tipo = chartData.type === 'donut' ? 'doughnut' : (chartData.type || 'bar');
         const labels = chartData.labels || [];
         const values = chartData.values || [];
-        const cores = labels.map((_, i) => MITRA_PALETTE[i % MITRA_PALETTE.length]);
+        const cores = labels.map((_, i) => PRIMORDIAL_PALETTE[i % PRIMORDIAL_PALETTE.length]);
 
         const isCircular = tipo === 'doughnut' || tipo === 'pie';
         const isLine = tipo === 'line';
@@ -553,7 +682,7 @@
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `mitra-med-${(chartData.title||'grafico').toLowerCase().replace(/\s+/g,'-')}.pdf`;
+            a.download = `primordial-data-${(chartData.title||'grafico').toLowerCase().replace(/\s+/g,'-')}.pdf`;
             document.body.appendChild(a); a.click(); a.remove();
             setTimeout(() => URL.revokeObjectURL(url), 1000);
         } catch (e) { console.error(e); alert('Erro ao baixar PDF.'); }
@@ -575,6 +704,144 @@
         return (s || '').replace(/[&<>"']/g, m => ({
             '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
         }[m]));
+    }
+
+    // ============== RELATÓRIOS PRIMORDIAL ==============
+    let relMeta = null;
+
+    async function carregarRelatoriosMeta() {
+        if (relMeta) return; // já carregado
+        try {
+            const r = await fetch('/api/reports/meta');
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            relMeta = await r.json();
+
+            document.getElementById('relPeriodo').textContent = relMeta.period.label;
+
+            // Campos (checkboxes)
+            const fc = document.getElementById('relFields');
+            fc.innerHTML = relMeta.fields.map(f => `
+                <label class="rel-check">
+                    <input type="checkbox" value="${f}"> ${f}
+                </label>
+            `).join('');
+
+            // group_by
+            const gb = document.getElementById('relGroupBy');
+            gb.innerHTML = relMeta.group_by_options
+                .map(g => `<option value="${g}">${g}</option>`).join('');
+
+            // Limites
+            const lim = document.getElementById('relLimit');
+            lim.min = relMeta.limit.min;
+            lim.max = relMeta.limit.max;
+            lim.value = relMeta.limit.default;
+
+            // Listener tipo de dado
+            const dt = document.getElementById('relDataType');
+            dt.addEventListener('change', relRefreshType);
+            relRefreshType();
+        } catch (e) {
+            console.error('Falha ao carregar metadados de relatórios:', e);
+        }
+    }
+
+    function relRefreshType() {
+        const t = document.getElementById('relDataType').value;
+        document.getElementById('relFieldsBlock').hidden = (t !== 'bruto');
+        document.getElementById('relGroupBlock').hidden = (t !== 'agregado');
+    }
+
+    function relCollectFilters() {
+        const dataType = document.getElementById('relDataType').value;
+        const fields = Array.from(
+            document.querySelectorAll('#relFields input[type=checkbox]:checked')
+        ).map(i => i.value);
+        const groupBy = document.getElementById('relGroupBy').value || null;
+        const limit = parseInt(document.getElementById('relLimit').value || '50', 10);
+        const status = (document.getElementById('relStatus').value || '')
+            .split(',').map(s => s.trim()).filter(Boolean);
+        const convenio = (document.getElementById('relConvenio').value || '')
+            .split(',').map(s => s.trim()).filter(Boolean);
+
+        const body = { data_type: dataType, limit };
+        if (dataType === 'bruto')    body.fields   = fields;
+        if (dataType === 'agregado') body.group_by = groupBy;
+        if (status.length)   body.status   = status;
+        if (convenio.length) body.convenio = convenio;
+        return body;
+    }
+
+    async function relPreview() {
+        const body = relCollectFilters();
+        const out = document.getElementById('relPreviewBody');
+        const meta = document.getElementById('relPreviewMeta');
+        out.innerHTML = '<div class="rel-empty">Carregando…</div>';
+        meta.textContent = '';
+        try {
+            const r = await fetch('/api/reports/preview', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body),
+            });
+            if (r.status === 422) {
+                const j = await r.json();
+                out.innerHTML = `<div class="rel-error">${escapeHtml(j.detail || 'Filtros inválidos.')}</div>`;
+                return;
+            }
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            const data = await r.json();
+            renderRelPreview(data);
+        } catch (e) {
+            out.innerHTML = `<div class="rel-error">Erro: ${escapeHtml(String(e))}</div>`;
+        }
+    }
+
+    function renderRelPreview(data) {
+        const out  = document.getElementById('relPreviewBody');
+        const meta = document.getElementById('relPreviewMeta');
+        meta.textContent = `${data.row_count} linha(s) — ${data.period.label}`;
+        if (!data.rows || !data.rows.length) {
+            out.innerHTML = '<div class="rel-empty">Nenhum registro no mês atual com esses filtros.</div>';
+            return;
+        }
+        const cols = data.columns;
+        const head = '<tr>' + cols.map(c => `<th>${escapeHtml(c)}</th>`).join('') + '</tr>';
+        const body = data.rows.map(r =>
+            '<tr>' + cols.map(c => `<td>${escapeHtml(String(r[c] ?? ''))}</td>`).join('') + '</tr>'
+        ).join('');
+        out.innerHTML = `<div class="rel-table-wrap"><table class="rel-table"><thead>${head}</thead><tbody>${body}</tbody></table></div>`;
+    }
+
+    async function relExport(format) {
+        const body = relCollectFilters();
+        try {
+            const r = await fetch('/api/reports/export?format=' + encodeURIComponent(format), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body),
+            });
+            if (r.status === 422) {
+                const j = await r.json();
+                alert(j.detail || 'Filtros inválidos.');
+                return;
+            }
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+
+            // Extrai filename do Content-Disposition
+            const cd = r.headers.get('Content-Disposition') || '';
+            const m = cd.match(/filename="?([^"]+)"?/);
+            const filename = m ? m[1] : `relatorio.${format}`;
+
+            const blob = await r.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = filename;
+            document.body.appendChild(a); a.click();
+            a.remove(); URL.revokeObjectURL(url);
+        } catch (e) {
+            alert('Falha ao exportar: ' + e);
+        }
     }
 
     // Inicialização

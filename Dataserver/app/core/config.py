@@ -9,29 +9,41 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-def _build_db_url() -> str:
-    """Monta a URL do Postgres preferindo DATABASE_URL (Replit/produção)."""
-    direct = os.getenv("DATABASE_URL")
-    if direct:
-        return direct
-    user = os.getenv("PGUSER", os.getenv("DB_USER", "postgres"))
+def _components_db_url() -> str | None:
+    """Monta URL a partir de variáveis individuais (PG* / DB_*)."""
+    user = os.getenv("PGUSER", os.getenv("DB_USER"))
+    host = os.getenv("PGHOST", os.getenv("DB_HOST"))
+    name = os.getenv("PGDATABASE", os.getenv("DB_NAME"))
+    if not (user and host and name):
+        return None
     pwd = os.getenv("PGPASSWORD", os.getenv("DB_PASS", ""))
-    host = os.getenv("PGHOST", os.getenv("DB_HOST", "localhost"))
     port = os.getenv("PGPORT", os.getenv("DB_PORT", "5432"))
-    name = os.getenv("PGDATABASE", os.getenv("DB_NAME", "postgres"))
     return f"postgresql://{user}:{pwd}@{host}:{port}/{name}"
 
 
-def _bool_env(name: str, default: bool) -> bool:
-    v = os.getenv(name)
-    if v is None:
-        return default
-    return v.strip().lower() in ("1", "true", "yes", "on")
+def _primary_db_url() -> str | None:
+    """Banco preferencial: PostgreSQL externo do cliente (Primordial)."""
+    return os.getenv("PRIMORDIAL_DATABASE_URL")
+
+
+def _fallback_db_url() -> str | None:
+    """Banco de fallback: PostgreSQL gerenciado pelo Replit."""
+    return os.getenv("DATABASE_URL") or _components_db_url()
+
+
+def _build_db_url() -> str:
+    """URL ativa: primário se disponível, senão fallback. Não testa conexão."""
+    return _primary_db_url() or _fallback_db_url() or "postgresql://postgres@localhost:5432/postgres"
 
 
 @dataclass(frozen=True)
 class Settings:
+    # URL ativa (back-compat). O fallback automático em caso de falha de
+    # conexão é feito em `app.db.engine` no momento da criação do engine.
     database_url: str = field(default_factory=_build_db_url)
+    primary_database_url: str | None = field(default_factory=_primary_db_url)
+    fallback_database_url: str | None = field(default_factory=_fallback_db_url)
+
     groq_api_key: str | None = field(default_factory=lambda: os.getenv("GROQ_API_KEY"))
 
     # Limites operacionais
@@ -53,17 +65,7 @@ class Settings:
         "anamnese", "prontuario", "prontuário",
     )
 
-    # Autenticação
-    auth_enabled: bool = field(default_factory=lambda: _bool_env("AUTH_ENABLED", True))
-    jwt_secret: str | None = field(default_factory=lambda: os.getenv("JWT_SECRET"))
-    jwt_expire_minutes: int = field(
-        default_factory=lambda: int(os.getenv("JWT_EXPIRE_MINUTES", "720"))
-    )
-    cookie_secure: bool = field(default_factory=lambda: _bool_env("COOKIE_SECURE", False))
-    admin_username: str | None = field(default_factory=lambda: os.getenv("ADMIN_USERNAME"))
-    admin_password: str | None = field(default_factory=lambda: os.getenv("ADMIN_PASSWORD"))
-
-    app_title: str = "Mitra Med — Inteligência Clínica"
+    app_title: str = "Primordial Data — Inteligência Clínica"
     app_version: str = "2.2"
 
 

@@ -84,8 +84,3 @@ class ExportChartIn(BaseModel):
     chartData: ChartDataIn
     suggested_insight: Optional[str] = Field(default=None, max_length=1000)
     analise: Optional[str] = Field(default=None, max_length=4000)
-
-
-class LoginIn(BaseModel):
-    username: str = Field(min_length=1, max_length=80)
-    password: str = Field(min_length=1, max_length=200)

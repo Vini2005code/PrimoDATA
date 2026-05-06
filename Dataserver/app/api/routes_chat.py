@@ -7,7 +7,6 @@ from fastapi.responses import JSONResponse
 from app.core.logging_setup import get_logger
 from app.schemas.chat import RequisicaoChat
 from app.services import ai_engine, conversations, patients
-from app.services.chart_render import gerar_imagem_grafico
 
 logger = get_logger(__name__)
 router = APIRouter(tags=["chat"])
@@ -34,11 +33,8 @@ async def api_analisar(req: RequisicaoChat):
         contexto = patients.get_clinical_context()
         plano = ai_engine.planejar_grafico(contexto, req.message)
 
-        # 3. Imagem inline (compat) + chartData estruturado
-        url_imagem = None
+        # 3. chartData estruturado para o frontend (Chart.js)
         tipo = plano.get("tipo_grafico")
-        if tipo and tipo != "null":
-            url_imagem = gerar_imagem_grafico(plano)
         chart_data = conversations.plano_to_chart_data(plano)
 
         # 4. Persiste resposta do assistente
@@ -51,7 +47,7 @@ async def api_analisar(req: RequisicaoChat):
                 sugestao=plano.get("sugestao"),
             )
 
-        # 5. Resposta padronizada (novo schema + legados)
+        # 5. Resposta padronizada
         return JSONResponse({
             "conversa_id": conversa_id,
             "analise": plano.get("analise", "Análise concluída."),
@@ -60,22 +56,12 @@ async def api_analisar(req: RequisicaoChat):
             "labels": plano.get("eixo_x") or [],
             "values": plano.get("valores") or [],
             "suggested_insight": plano.get("suggested_insight") or plano.get("sugestao"),
-            # Legado:
-            "tipo_grafico": tipo,
-            "titulo": plano.get("titulo"),
-            "eixo_x": plano.get("eixo_x"),
-            "valores": plano.get("valores"),
-            "chart": url_imagem,
             "chartData": chart_data,
-            "sugestao": plano.get("sugestao"),
         })
 
     except Exception as e:
         logger.error(f"Erro em /api/analisar: {e}")
         return JSONResponse(
-            {
-                "analise": f"⚠️ Desculpe, ocorreu um erro técnico: {e}",
-                "tipo_grafico": None,
-            },
+            {"analise": f"⚠️ Desculpe, ocorreu um erro técnico: {e}"},
             status_code=500,
         )
