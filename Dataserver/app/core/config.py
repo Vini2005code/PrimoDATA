@@ -35,9 +35,13 @@ class Settings:
     groq_api_key: str | None = field(default_factory=lambda: os.getenv("GROQ_API_KEY"))
 
     # Limites operacionais
-    max_patients_context: int = 100
+    # Usado pelo get_clinical_context() ao montar o contexto clínico para a IA.
+    max_patients_context: int = 1000
     dashboard_chart_limit: int = 10
-    chart_max_points: int = 200
+
+    # Usado por schemas/chat.py para validar tamanho de labels/values.
+    # Também limita payload de pontos que chegam ao frontend/PDF.
+    chart_max_points: int = 1000
     chart_label_max_len: int = 120
     schema_cache_ttl: int = 60
 
